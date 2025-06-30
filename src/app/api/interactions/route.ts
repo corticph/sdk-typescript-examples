@@ -1,0 +1,58 @@
+import {NextResponse} from "next/server";
+import {CortiClient, CortiEnvironment} from "@corti/core";
+import {devEnvironment} from "@/app/devEnvironment";
+
+export async function GET() {
+    try {
+        const client = new CortiClient({
+            tenantName: process.env.TENANT_NAME!,
+            // environment: CortiEnvironment.Eu,
+            environment: devEnvironment,
+            auth: {
+                clientId: process.env.CLIENT_ID!,
+                clientSecret: process.env.CLIENT_SECRET!,
+            },
+        });
+
+        const list = await client.interactions.list();
+        const collectedData = [];
+
+        for await (const item of list) {
+            collectedData.push(item);
+        }
+
+        const createdInteraction = await client.interactions.create({
+            encounter: {
+                identifier: Date.now().toString(),
+                status: 'planned',
+                type: 'first_consultation',
+            },
+            patient: {
+                identifier: Date.now().toString(),
+                gender: 'unknown'
+            }
+        });
+
+        const interactionGet = await client.interactions.get(createdInteraction.interactionId);
+
+        const updatedInteraction = await client.interactions.update(createdInteraction.interactionId, {
+            encounter: {
+                status: 'in-progress'
+            }
+        });
+
+        const interactionDelete = await client.interactions.delete(createdInteraction.interactionId);
+
+        return NextResponse.json({
+            list: collectedData.length,
+            createdInteraction,
+            updatedInteraction,
+            interactionGet,
+            interactionDelete
+        });
+    } catch (error) {
+        return NextResponse.json({
+            error: error,
+        });
+    }
+}
