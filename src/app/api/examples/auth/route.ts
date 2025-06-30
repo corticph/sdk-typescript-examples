@@ -1,13 +1,11 @@
-import {NextResponse} from "next/server";
-import {CortiAuth, CortiClient, CortiEnvironment} from "@corti/sdk";
-import {devEnvironment} from "@/dev/devEnvironment";
+import { NextResponse } from 'next/server';
+import { CortiAuth, CortiClient, CortiEnvironment } from '@corti/sdk';
 
 export async function GET() {
     try {
         const credentialsClient = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: devEnvironment,
-            // environment: CortiEnvironment.Eu,
+            environment: CortiEnvironment.Eu,
             auth: {
                 clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
                 clientSecret: process.env.CLIENT_SECRET!,
@@ -15,8 +13,7 @@ export async function GET() {
         });
 
         const auth = new CortiAuth({
-            environment: devEnvironment,
-            // environment: CortiEnvironment.Eu,
+            environment: CortiEnvironment.Eu,
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
         });
 
@@ -27,8 +24,7 @@ export async function GET() {
 
         const bearerClient = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: devEnvironment,
-            // environment: CortiEnvironment.Eu,
+            environment: CortiEnvironment.Eu,
             auth: {
                 ...token,
                 refreshAccessToken: async () => {

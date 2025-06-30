@@ -1,13 +1,11 @@
-import {NextResponse} from "next/server";
-import {CortiClient, CortiEnvironment} from "@corti/sdk";
-import {devEnvironment} from "@/dev/devEnvironment";
+import { NextResponse } from 'next/server';
+import { CortiClient, CortiEnvironment } from '@corti/sdk';
 
 export async function GET() {
     try {
         const client = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: devEnvironment,
-            // environment: CortiEnvironment.Eu,
+            environment: CortiEnvironment.Eu,
             auth: {
                 clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
                 clientSecret: process.env.CLIENT_SECRET!,
@@ -30,26 +28,26 @@ export async function GET() {
 
         const createdDocument = await client.documents.create(interaction.interactionId, {
             context: [{
-                type: "facts",
+                type: 'facts',
                 data: [{
-                    text: "Patient has trouble breathing",
-                    source: "core"
+                    text: 'Patient has trouble breathing',
+                    source: 'core'
                 }, {
-                    text: "Patient is experiencing chest pain",
-                    source: "user"
+                    text: 'Patient is experiencing chest pain',
+                    source: 'user'
                 }]
             }],
-            templateKey: "corti-patient-summary",
-            outputLanguage: "en",
-            name: "Patient Consultation Note"
+            templateKey: 'corti-patient-summary',
+            outputLanguage: 'en',
+            name: 'Patient Consultation Note'
         });
 
         const retrievedDocument = await client.documents.get(interaction.interactionId, createdDocument.id!);
 
         const updatedDocument = await client.documents.update(interaction.interactionId, createdDocument.id!, {
             sections: [{
-                key: "chief-complaint",
-                text: "Patient reports severe trouble breathing and chest pain"
+                key: 'chief-complaint',
+                text: 'Patient reports severe trouble breathing and chest pain'
             }]
         });
 
@@ -63,7 +61,7 @@ export async function GET() {
             createdDocument,
             retrievedDocument,
             updatedDocument,
-            message: "Example of documents API operations"
+            message: 'Example of documents API operations'
         });
     } catch (error) {
         return NextResponse.json({

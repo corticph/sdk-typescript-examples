@@ -1,13 +1,11 @@
-import {NextResponse} from "next/server";
-import {CortiClient, CortiEnvironment} from "@corti/sdk";
-import {devEnvironment} from "@/dev/devEnvironment";
+import { NextResponse } from 'next/server';
+import { CortiClient, CortiEnvironment } from '@corti/sdk';
 
 export async function GET() {
     try {
         const client = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: devEnvironment,
-            // environment: CortiEnvironment.Eu,
+            environment: CortiEnvironment.Eu,
             auth: {
                 clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
                 clientSecret: process.env.CLIENT_SECRET!,
@@ -37,7 +35,7 @@ export async function GET() {
             allTemplates,
             filteredSections,
             specificTemplate,
-            message: "Example of templates API operations"
+            message: 'Example of templates API operations'
         });
     } catch (error) {
         return NextResponse.json({

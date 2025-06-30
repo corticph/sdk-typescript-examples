@@ -1,9 +1,9 @@
 'use client';
 
-import {useContext, useEffect, useState} from "react";
-import { Corti } from "@corti/sdk";
-import {AuthContext} from "@/common/AuthContext";
-import {JsonComponent} from "@/common/JsonComponents";
+import { useContext, useEffect, useState } from 'react';
+import { Corti } from '@corti/sdk';
+import { AuthContext } from '@/common/AuthContext';
+import { JsonComponent } from '@/common/JsonComponents';
 
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
@@ -42,18 +42,18 @@ export default function Page() {
 
             const createdDocumentResponse = await cortiClient.documents.create(interactionResponse.interactionId, {
                 context: [{
-                    type: "facts",
+                    type: 'facts',
                     data: [{
-                        text: "Patient has trouble breathing",
-                        source: "core"
+                        text: 'Patient has trouble breathing',
+                        source: 'core'
                     }, {
-                        text: "Patient is experiencing chest pain",
-                        source: "user"
+                        text: 'Patient is experiencing chest pain',
+                        source: 'user'
                     }]
                 }],
-                templateKey: "corti-patient-summary",
-                outputLanguage: "en",
-                name: "Patient Consultation Note"
+                templateKey: 'corti-patient-summary',
+                outputLanguage: 'en',
+                name: 'Patient Consultation Note'
             });
             setCreatedDocument(createdDocumentResponse);
 
@@ -62,8 +62,8 @@ export default function Page() {
 
             const updatedDocumentResponse = await cortiClient.documents.update(interactionResponse.interactionId, createdDocumentResponse.id!, {
                 sections: [{
-                    key: "chief-complaint",
-                    text: "Patient reports severe trouble breathing and chest pain"
+                    key: 'chief-complaint',
+                    text: 'Patient reports severe trouble breathing and chest pain'
                 }]
             });
             setUpdatedDocument(updatedDocumentResponse);

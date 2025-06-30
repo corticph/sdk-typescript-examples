@@ -1,9 +1,9 @@
 'use client';
 
-import {useContext, useEffect, useState} from "react";
-import { Corti } from "@corti/sdk";
-import {AuthContext} from "@/common/AuthContext";
-import {JsonComponent} from "@/common/JsonComponents";
+import { useContext, useEffect, useState } from 'react';
+import { Corti } from '@corti/sdk';
+import { AuthContext } from '@/common/AuthContext';
+import { JsonComponent } from '@/common/JsonComponents';
 
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);

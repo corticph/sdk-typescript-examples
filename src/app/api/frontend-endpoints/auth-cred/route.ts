@@ -1,12 +1,10 @@
-import {NextResponse} from "next/server";
-import {CortiAuth, CortiEnvironment} from "@corti/sdk";
-import {devEnvironment} from "@/dev/devEnvironment";
+import { NextResponse } from 'next/server';
+import { CortiAuth, CortiEnvironment } from '@corti/sdk';
 
 export async function GET() {
     try {
         const auth = new CortiAuth({
-            environment: devEnvironment,
-            // environment: CortiEnvironment.Eu,
+            environment: CortiEnvironment.Eu,
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
         });
 

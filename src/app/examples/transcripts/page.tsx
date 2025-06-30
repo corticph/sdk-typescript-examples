@@ -1,10 +1,10 @@
 'use client';
 
-import {ChangeEvent, useContext, useState} from "react";
-import { Corti } from "@corti/sdk";
-import {AuthContext} from "@/common/AuthContext";
-import {useInteraction} from "@/common/useInteraction";
-import {JsonComponent} from "@/common/JsonComponents";
+import { ChangeEvent, useContext, useState } from 'react';
+import { Corti } from '@corti/sdk';
+import { AuthContext } from '@/common/AuthContext';
+import { useInteraction } from '@/common/useInteraction';
+import { JsonComponent } from '@/common/JsonComponents';
 
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
@@ -15,7 +15,7 @@ export default function Page() {
     const [createdTranscript, setCreatedTranscript] = useState<Corti.ResponseTranscriptCreate | null>(null);
     const [getTranscript, setGetTranscript] = useState<Corti.ResponseTranscriptCreate | null>(null);
     const [deleted, setDeleted] = useState<boolean>(false);
-    const [error, setError] = useState<any>(null);
+    const [error, setError] = useState<unknown>(null);
     const [loading, setLoading] = useState(false);
 
     async function handleFileUpload(e: ChangeEvent<HTMLInputElement>) {
@@ -81,7 +81,7 @@ export default function Page() {
             {createdTranscript && <div>Created Transcript: <JsonComponent data={createdTranscript} /></div>}
             {getTranscript && <div>Get Transcript: <JsonComponent data={getTranscript} /></div>}
             {deleted && <div>Deleted: true</div>}
-            {error && <div>Error: <JsonComponent data={error} /></div>}
+            {error ? <div>Error: <JsonComponent data={error} /></div> : null}
         </div>
     );
 } 

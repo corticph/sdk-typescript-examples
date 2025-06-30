@@ -1,10 +1,10 @@
 'use client';
 
-import {useContext, useEffect, useState,} from "react";
-import {AuthContext} from "@/common/AuthContext";
-import {useInteraction} from "@/common/useInteraction";
-import {JsonComponent} from "@/common/JsonComponents";
-import {Corti, CortiClient} from "@corti/sdk";
+import { useContext, useEffect, useState, } from 'react';
+import { AuthContext } from '@/common/AuthContext';
+import { useInteraction } from '@/common/useInteraction';
+import { JsonComponent } from '@/common/JsonComponents';
+import { Corti, CortiClient } from '@corti/sdk';
 
 type TranscribeSocket = Awaited<ReturnType<CortiClient['transcribe']['connect']>>
 type Messages = Corti.transcribe.TranscribeSocket.Response | Corti.TranscribeEndMessage;

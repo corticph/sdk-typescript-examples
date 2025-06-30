@@ -1,9 +1,9 @@
 'use client';
 
-import {useContext, useEffect, useState} from "react";
-import { Corti } from "@corti/sdk";
-import {AuthContext} from "@/common/AuthContext";
-import {JsonComponent} from "@/common/JsonComponents";
+import { useContext, useEffect, useState } from 'react';
+import { Corti } from '@corti/sdk';
+import { AuthContext } from '@/common/AuthContext';
+import { JsonComponent } from '@/common/JsonComponents';
 
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
@@ -47,11 +47,11 @@ export default function Page() {
 
             const createdFactsResponse = await cortiClient.facts.create(interactionResponse.interactionId, {
                 facts: [{
-                    text: "Patient has trouble breathing",
-                    group: "history-of-present-illness"
+                    text: 'Patient has trouble breathing',
+                    group: 'history-of-present-illness'
                 }, {
-                    text: "Patient is experiencing chest pain",
-                    group: "allergies"
+                    text: 'Patient is experiencing chest pain',
+                    group: 'allergies'
                 }]
             });
             setCreatedFacts(createdFactsResponse);
@@ -61,8 +61,8 @@ export default function Page() {
                     interactionResponse.interactionId, 
                     createdFactsResponse.facts[0].id,
                     {
-                        text: "Patient has severe trouble breathing",
-                        source: "user"
+                        text: 'Patient has severe trouble breathing',
+                        source: 'user'
                     }
                 );
                 setUpdatedFacts(updatedFactsResponse);
@@ -72,11 +72,11 @@ export default function Page() {
                         facts: [
                             {
                                 factId: createdFactsResponse.facts[0].id,
-                                text: "Patient has minor trouble breathing",
+                                text: 'Patient has minor trouble breathing',
                             },
                             {
                                 factId: createdFactsResponse.facts[1].id,
-                                text: "Patient is experiencing severe chest pain",
+                                text: 'Patient is experiencing severe chest pain',
                             }
                         ]
                     });

@@ -1,8 +1,8 @@
 'use client';
 
-import {useContext} from "react";
-import {AuthContext} from "@/common/AuthContext";
-import Link from "next/link";
+import { useContext } from 'react';
+import { AuthContext } from '@/common/AuthContext';
+import Link from 'next/link';
 
 export default function Home() {
     const {

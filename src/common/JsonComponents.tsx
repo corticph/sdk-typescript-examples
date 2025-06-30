@@ -1,5 +1,5 @@
 export function JsonComponent({ data }: {
-    data: any;
+    data: unknown;
 }) {
     return (
         <pre>{JSON.stringify(data, null, 2)}</pre>

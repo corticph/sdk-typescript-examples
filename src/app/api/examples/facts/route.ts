@@ -1,13 +1,11 @@
-import {NextResponse} from "next/server";
-import {CortiClient, CortiEnvironment} from "@corti/sdk";
-import {devEnvironment} from "@/dev/devEnvironment";
+import { NextResponse } from 'next/server';
+import { CortiClient, CortiEnvironment } from '@corti/sdk';
 
 export async function GET() {
     try {
         const client = new CortiClient({
             tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
-            environment: devEnvironment,
-            // environment: CortiEnvironment.Eu,
+            environment: CortiEnvironment.Eu,
             auth: {
                 clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
                 clientSecret: process.env.CLIENT_SECRET!,
@@ -32,18 +30,18 @@ export async function GET() {
 
         const createdFacts = await client.facts.create(interaction.interactionId, {
             facts: [{
-                text: "Patient has trouble breathing",
-                group: "history-of-present-illness"
+                text: 'Patient has trouble breathing',
+                group: 'history-of-present-illness'
             }, {
-                text: "Patient is experiencing chest pain",
-                group: "allergies"
+                text: 'Patient is experiencing chest pain',
+                group: 'allergies'
             }]
         });
 
         const updatedFacts = await client.facts.update(interaction.interactionId, createdFacts.facts![0].id!,
             {
-                text: "Patient has severe trouble breathing",
-                source: "user"
+                text: 'Patient has severe trouble breathing',
+                source: 'user'
             });
 
 
@@ -51,11 +49,11 @@ export async function GET() {
             facts: [
                 {
                     factId: createdFacts.facts![0].id!,
-                    text: "Patient has minor trouble breathing",
+                    text: 'Patient has minor trouble breathing',
                 },
                 {
                     factId: createdFacts.facts![1].id!,
-                    text: "Patient is experiencing severe chest pain",
+                    text: 'Patient is experiencing severe chest pain',
                 }
             ]
         });

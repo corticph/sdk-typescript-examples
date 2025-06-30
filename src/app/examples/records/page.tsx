@@ -1,10 +1,10 @@
 'use client';
 
-import {ChangeEvent, useContext, useState} from "react";
-import {Corti} from "@corti/sdk";
-import {AuthContext} from "@/common/AuthContext";
-import {useInteraction} from "@/common/useInteraction";
-import {JsonComponent} from "@/common/JsonComponents";
+import { ChangeEvent, useContext, useState } from 'react';
+import { Corti } from '@corti/sdk';
+import { AuthContext } from '@/common/AuthContext';
+import { useInteraction } from '@/common/useInteraction';
+import { JsonComponent } from '@/common/JsonComponents';
 
 async function convertStreamToBlob(
     stream: ReadableStream<Uint8Array>,
@@ -43,7 +43,7 @@ export default function Page() {
                 setFile(res);
             }
         } catch (e) {
-            console.error("Error uploading recording:", e);
+            console.error('Error uploading recording:', e);
         }
     }
 

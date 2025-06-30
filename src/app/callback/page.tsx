@@ -1,7 +1,7 @@
 'use client';
 
-import {useContext, useEffect} from "react";
-import {AuthContext} from "@/common/AuthContext";
+import { useContext, useEffect } from 'react';
+import { AuthContext } from '@/common/AuthContext';
 
 export default function Page() {
     const { getTokenFromCode } = useContext(AuthContext);
