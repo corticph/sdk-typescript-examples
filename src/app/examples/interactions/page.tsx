@@ -2,10 +2,11 @@
 
 import {useContext, useEffect, useState} from "react";
 import { Corti } from "@corti/core";
-import {AuthContext} from "@/app/AuthContext";
+import {AuthContext} from "@/common/AuthContext";
 
 export default function Page() {
-    const { cortiClient, refreshToken } = useContext(AuthContext);
+    const { cortiClient } = useContext(AuthContext);
+
     const [interactions, setInteractions] = useState<Corti.ResponseInteraction[]>([]);
     const [createInteraction, setCreateInteraction] = useState<Corti.ResponseInteractionCreate | null>(null);
     const [interactionGet, setInteractionGet] = useState<Corti.ResponseInteraction | null>(null);
@@ -64,7 +65,6 @@ export default function Page() {
     return (
         <div>
             <button onClick={handleUpdate}>Update again</button>
-            {refreshToken && <div>Token has been refreshed : <pre>{JSON.stringify(refreshToken, null, 2)}</pre></div>}
             <div>Interactions: {interactions.length}</div>
             <div>Created: <pre>{JSON.stringify(createInteraction, null, '\t')}</pre></div>
             <div>Get: <pre>{JSON.stringify(interactionGet, null, '\t')}</pre></div>

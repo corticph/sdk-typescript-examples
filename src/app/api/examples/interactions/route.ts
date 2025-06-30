@@ -1,15 +1,15 @@
 import {NextResponse} from "next/server";
 import {CortiClient, CortiEnvironment} from "@corti/core";
-import {devEnvironment} from "@/app/devEnvironment";
+import {devEnvironment} from "@/dev/devEnvironment";
 
 export async function GET() {
     try {
         const client = new CortiClient({
-            tenantName: process.env.TENANT_NAME!,
+            tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
             // environment: CortiEnvironment.Eu,
             environment: devEnvironment,
             auth: {
-                clientId: process.env.CLIENT_ID!,
+                clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
                 clientSecret: process.env.CLIENT_SECRET!,
             },
         });
@@ -48,7 +48,8 @@ export async function GET() {
             createdInteraction,
             updatedInteraction,
             interactionGet,
-            interactionDelete
+            interactionDelete,
+            message: "Example of CRUD operations for interactions"
         });
     } catch (error) {
         return NextResponse.json({

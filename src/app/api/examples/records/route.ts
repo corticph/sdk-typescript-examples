@@ -1,15 +1,18 @@
 import {NextResponse} from "next/server";
-import {CortiClient} from "@corti/core";
+import {CortiClient, CortiEnvironment} from "@corti/core";
 import {createReadStream, createWriteStream} from "node:fs";
-import {devEnvironment} from "@/app/devEnvironment";
+import {devEnvironment} from "@/dev/devEnvironment";
+import { Readable } from "node:stream";
+import { finished } from "stream/promises";
 
 export async function GET() {
     try {
         const client = new CortiClient({
-            tenantName: process.env.TENANT_NAME!,
+            tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
             environment: devEnvironment,
+            // environment: CortiEnvironment.Eu,
             auth: {
-                clientId: process.env.CLIENT_ID!,
+                clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
                 clientSecret: process.env.CLIENT_SECRET!,
             },
         });
@@ -27,22 +30,28 @@ export async function GET() {
         const file = createReadStream('public/trouble-breathing.mp3', {
             autoClose: true
         });
+
         const res = await client.recordings.upload(file, interaction.interactionId);
-        const fileName = res.recordingId || '';
 
-        const readable = await client.recordings.get(interaction.interactionId, fileName);
-        const stream = createWriteStream(`public/${fileName}.mp3`);
+        const webReadable = await client.recordings.get(interaction.interactionId, res.recordingId);
+        // @ts-expect-error Convert Web ReadableStream to Node.js Readable
+        const nodeReadable = Readable.from(webReadable);
+        const writeStream = createWriteStream(`public/${res.recordingId}.mp3`);
 
-        readable.pipe(stream, {
+        nodeReadable.pipe(writeStream, {
             end: true
         });
 
-        await client.recordings.delete(interaction.interactionId, fileName);
+        await finished(writeStream);
 
+        await client.recordings.delete(interaction.interactionId, res.recordingId);
+
+        // clean up
         await client.interactions.delete(interaction.interactionId);
 
         return NextResponse.json({
             recordsList,
+            recordCreate: res,
         });
     } catch (error) {
         return NextResponse.json({

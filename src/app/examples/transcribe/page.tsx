@@ -1,22 +1,24 @@
 'use client';
 
 import {useContext, useEffect, useState,} from "react";
-import {AuthContext} from "@/app/AuthContext";
-import {useInteraction} from "@/app/useInteraction";
-import {JsonComponent} from "@/app/JsonComponents";
-import {Corti} from "@corti/core";
+import {AuthContext} from "@/common/AuthContext";
+import {useInteraction} from "@/common/useInteraction";
+import {JsonComponent} from "@/common/JsonComponents";
+import {Corti, CortiClient} from "@corti/core";
 
-type Messages = Corti.transcribe.TranscribeSocket.Response | Corti.EndMessage;
+type TranscribeSocket = Awaited<ReturnType<CortiClient['transcribe']['connect']>>
+type Messages = Corti.transcribe.TranscribeSocket.Response | Corti.TranscribeEndMessage;
 
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
     const { interaction } = useInteraction();
+
     const [messages, setMessages] = useState<Messages[]>([]);
     const [error, setError] = useState<Error | null>(null);
     const [status, setStatus] = useState<'opened' | 'closed' | 'uninitialized' | 'connecting'>('uninitialized');
 
     const [actionsAvailable, setActionsAvailable] = useState<boolean>(false);
-    const [ws, setWs] = useState<Corti.transcribe.TranscribeSocket | null>(null);
+    const [ws, setWs] = useState<TranscribeSocket | null>(null);
 
     async function handleSocketConnect() {
         if (!interaction || !cortiClient) {

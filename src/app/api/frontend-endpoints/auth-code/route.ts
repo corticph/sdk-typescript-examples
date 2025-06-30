@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
-import {CortiAuth} from "@corti/core";
-import {devEnvironment} from "@/app/devEnvironment";
+import {CortiAuth, CortiEnvironment} from "@corti/core";
+import {devEnvironment} from "@/dev/devEnvironment";
 
 export async function GET(request: NextRequest) {
     try {
@@ -8,11 +8,12 @@ export async function GET(request: NextRequest) {
 
         const auth = new CortiAuth({
             environment: devEnvironment,
-            tenantName: process.env.TENANT_NAME!,
+            // environment: CortiEnvironment.Eu,
+            tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
         });
 
         const token = await auth.getCodeFlowToken({
-            client_id: process.env.CLIENT_ID!,
+            client_id: process.env.NEXT_PUBLIC_CLIENT_ID!,
             client_secret: process.env.CLIENT_SECRET!,
             code: searchParams.get('code') || '',
             redirect_uri: 'http://localhost:3000/callback',

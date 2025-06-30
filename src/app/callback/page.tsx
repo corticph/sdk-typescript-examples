@@ -1,23 +1,13 @@
 'use client';
 
 import {useContext, useEffect} from "react";
-import {useSearchParams, useRouter} from "next/navigation";
-import {AuthContext} from "@/app/AuthContext";
+import {AuthContext} from "@/common/AuthContext";
 
 export default function Page() {
-    const { setAccessToken } = useContext(AuthContext);
-    const params = useSearchParams();
-    const router = useRouter();
+    const { getTokenFromCode } = useContext(AuthContext);
 
     useEffect(() => {
-        (async () => {
-            const res = await fetch('/api/auth-code?' + params.toString());
-            const data = await res.json();
-
-            setAccessToken(data);
-
-            router.replace('/');
-        })()
+        void getTokenFromCode();
     }, []);
 
     return (

@@ -1,5 +1,5 @@
 import {useContext, useEffect, useState} from "react";
-import {AuthContext} from "@/app/AuthContext";
+import {AuthContext} from "@/common/AuthContext";
 import {Corti} from "@corti/core";
 
 export function useInteraction() {
