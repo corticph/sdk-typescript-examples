@@ -1,6 +1,6 @@
 import {useContext, useEffect, useState} from "react";
 import {AuthContext} from "@/common/AuthContext";
-import {Corti} from "@corti/core";
+import {Corti} from "@corti/sdk";
 
 export function useInteraction() {
     const { cortiClient } = useContext(AuthContext);

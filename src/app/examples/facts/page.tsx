@@ -1,7 +1,7 @@
 'use client';
 
 import {useContext, useEffect, useState} from "react";
-import { Corti } from "@corti/core";
+import { Corti } from "@corti/sdk";
 import {AuthContext} from "@/common/AuthContext";
 import {JsonComponent} from "@/common/JsonComponents";
 
@@ -26,7 +26,6 @@ export default function Page() {
         if (!cortiClient) return;
 
         try {
-            // Create interaction
             const interactionResponse = await cortiClient.interactions.create({
                 encounter: {
                     identifier: Date.now().toString(),
@@ -40,15 +39,12 @@ export default function Page() {
             });
             setInteraction(interactionResponse);
 
-            // Get fact groups
             const factsGroupsResponse = await cortiClient.facts.factgroupsList();
             setFactsGroups(factsGroupsResponse);
 
-            // List facts (should be empty initially)
             const listResponseData = await cortiClient.facts.list(interactionResponse.interactionId);
             setListResponse(listResponseData);
 
-            // Create facts
             const createdFactsResponse = await cortiClient.facts.create(interactionResponse.interactionId, {
                 facts: [{
                     text: "Patient has trouble breathing",
@@ -60,7 +56,6 @@ export default function Page() {
             });
             setCreatedFacts(createdFactsResponse);
 
-            // Update a fact
             if (createdFactsResponse.facts && createdFactsResponse.facts[0]?.id) {
                 const updatedFactsResponse = await cortiClient.facts.update(
                     interactionResponse.interactionId, 
@@ -72,7 +67,6 @@ export default function Page() {
                 );
                 setUpdatedFacts(updatedFactsResponse);
 
-                // Batch update facts
                 if (createdFactsResponse.facts[1]?.id) {
                     const batchUpdateResponse = await cortiClient.facts.batchUpdate(interactionResponse.interactionId, {
                         facts: [
@@ -90,7 +84,6 @@ export default function Page() {
                 }
             }
 
-            // Clean up - delete the interaction
             await cortiClient.interactions.delete(interactionResponse.interactionId);
         } catch (error) {
             console.error('Error fetching facts:', error);

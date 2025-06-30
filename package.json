@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@corti/core": "^0.0.0-alpha.8",
+    "@corti/sdk": "^0.0.0-alpha.10",
     "next": "15.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

@@ -1,7 +1,7 @@
 'use client';
 
 import {useContext, useEffect, useState} from "react";
-import { Corti } from "@corti/core";
+import { Corti } from "@corti/sdk";
 import {AuthContext} from "@/common/AuthContext";
 import {JsonComponent} from "@/common/JsonComponents";
 
@@ -24,7 +24,6 @@ export default function Page() {
         if (!cortiClient) return;
 
         try {
-            // Create interaction
             const interactionResponse = await cortiClient.interactions.create({
                 encounter: {
                     identifier: Date.now().toString(),
@@ -38,11 +37,9 @@ export default function Page() {
             });
             setInteraction(interactionResponse);
 
-            // List documents (should be empty initially)
             const documentsListResponse = await cortiClient.documents.list(interactionResponse.interactionId);
             setDocumentsList(documentsListResponse);
 
-            // Create a document with facts context
             const createdDocumentResponse = await cortiClient.documents.create(interactionResponse.interactionId, {
                 context: [{
                     type: "facts",
@@ -60,11 +57,9 @@ export default function Page() {
             });
             setCreatedDocument(createdDocumentResponse);
 
-            // Get the created document
             const retrievedDocumentResponse = await cortiClient.documents.get(interactionResponse.interactionId, createdDocumentResponse.id!);
             setRetrievedDocument(retrievedDocumentResponse);
 
-            // Update the document
             const updatedDocumentResponse = await cortiClient.documents.update(interactionResponse.interactionId, createdDocumentResponse.id!, {
                 sections: [{
                     key: "chief-complaint",
@@ -73,10 +68,7 @@ export default function Page() {
             });
             setUpdatedDocument(updatedDocumentResponse);
 
-            // Delete the document
             await cortiClient.documents.delete(interactionResponse.interactionId, createdDocumentResponse.id!);
-
-            // Clean up - delete the interaction
             await cortiClient.interactions.delete(interactionResponse.interactionId);
         } catch (error) {
             console.error('Error fetching documents:', error);

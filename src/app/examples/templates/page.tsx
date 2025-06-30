@@ -1,7 +1,7 @@
 'use client';
 
 import {useContext, useEffect, useState} from "react";
-import { Corti } from "@corti/core";
+import { Corti } from "@corti/sdk";
 import {AuthContext} from "@/common/AuthContext";
 import {JsonComponent} from "@/common/JsonComponents";
 
@@ -22,22 +22,18 @@ export default function Page() {
         if (!cortiClient) return;
 
         try {
-            // Get all templates
             const allTemplatesResponse = await cortiClient.templates.list();
             setAllTemplates(allTemplatesResponse);
 
-            // Get templates with filters
             const filteredTemplatesResponse = await cortiClient.templates.list({
                 lang: 'en',
                 status: 'active'
             });
             setFilteredTemplates(filteredTemplatesResponse);
 
-            // Get template sections
             const templateSectionsResponse = await cortiClient.templates.sectionsList();
             setTemplateSections(templateSectionsResponse);
 
-            // Get a specific template by key (if any templates exist)
             if (allTemplatesResponse.data && allTemplatesResponse.data.length > 0) {
                 const firstTemplate = allTemplatesResponse.data[0];
                 if (firstTemplate.key) {

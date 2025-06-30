@@ -3,7 +3,7 @@
 import {useContext, useEffect, useState,} from "react";
 import {AuthContext} from "@/common/AuthContext";
 import {useInteraction} from "@/common/useInteraction";
-import {Corti, CortiClient} from "@corti/core";
+import {Corti, CortiClient} from "@corti/sdk";
 import {JsonComponent} from "@/common/JsonComponents";
 
 type StreamSocket = Awaited<ReturnType<CortiClient['stream']['connect']>>

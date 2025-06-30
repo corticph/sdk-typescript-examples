@@ -1,7 +1,7 @@
 'use client';
 
 import {createContext, useState} from "react";
-import {CortiClient, CortiEnvironment, CortiAuth} from "@corti/core";
+import {CortiClient, CortiEnvironment, CortiAuth} from "@corti/sdk";
 import {devEnvironment} from "@/dev/devEnvironment";
 import {useRouter, useSearchParams} from "next/navigation";
 

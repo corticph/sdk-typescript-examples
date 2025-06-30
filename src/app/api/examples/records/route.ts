@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {CortiClient, CortiEnvironment} from "@corti/core";
+import {CortiClient, CortiEnvironment} from "@corti/sdk";
 import {createReadStream, createWriteStream} from "node:fs";
 import {devEnvironment} from "@/dev/devEnvironment";
 import { Readable } from "node:stream";

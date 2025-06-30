@@ -1,7 +1,7 @@
 'use client';
 
 import {ChangeEvent, useContext, useState} from "react";
-import {Corti} from "@corti/core";
+import {Corti} from "@corti/sdk";
 import {AuthContext} from "@/common/AuthContext";
 import {useInteraction} from "@/common/useInteraction";
 import {JsonComponent} from "@/common/JsonComponents";

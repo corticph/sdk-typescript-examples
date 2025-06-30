@@ -1,7 +1,7 @@
 'use client';
 
 import {ChangeEvent, useContext, useState} from "react";
-import { Corti } from "@corti/core";
+import { Corti } from "@corti/sdk";
 import {AuthContext} from "@/common/AuthContext";
 import {useInteraction} from "@/common/useInteraction";
 import {JsonComponent} from "@/common/JsonComponents";
@@ -39,11 +39,9 @@ export default function Page() {
                 return;
             }
 
-            // Upload recording
             const recordingRes = await cortiClient.recordings.upload(file, interaction.id);
             setRecording(recordingRes);
 
-            // List transcripts (should be empty initially)
             const list = await cortiClient.transcripts.list(interaction.id);
             const collectedData = [];
             for await (const item of list) {
@@ -51,7 +49,6 @@ export default function Page() {
             }
             setTranscriptsList(collectedData);
 
-            // Create transcript
             const createdTranscriptRes = await cortiClient.transcripts.create(interaction.id, {
                 recordingId: recordingRes.recordingId,
                 primaryLanguage: 'en',
@@ -59,14 +56,10 @@ export default function Page() {
             });
             setCreatedTranscript(createdTranscriptRes);
 
-            // Get transcript
             const getTranscriptRes = await cortiClient.transcripts.get(interaction.id, createdTranscriptRes.id);
             setGetTranscript(getTranscriptRes);
 
-            // Delete transcript
             await cortiClient.transcripts.delete(interaction.id, createdTranscriptRes.id);
-
-            // Delete recording
             await cortiClient.recordings.delete(interaction.id, recordingRes.recordingId);
 
             setDeleted(true);

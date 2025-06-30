@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {CortiAuth, CortiClient, CortiEnvironment} from "@corti/core";
+import {CortiAuth, CortiClient, CortiEnvironment} from "@corti/sdk";
 import {devEnvironment} from "@/dev/devEnvironment";
 
 export async function GET() {
