@@ -3,6 +3,7 @@
 import {useContext, useEffect, useState} from "react";
 import { Corti } from "@corti/core";
 import {AuthContext} from "@/common/AuthContext";
+import {JsonComponent} from "@/common/JsonComponents";
 
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
@@ -66,9 +67,9 @@ export default function Page() {
         <div>
             <button onClick={handleUpdate}>Update again</button>
             <div>Interactions: {interactions.length}</div>
-            <div>Created: <pre>{JSON.stringify(createInteraction, null, '\t')}</pre></div>
-            <div>Get: <pre>{JSON.stringify(interactionGet, null, '\t')}</pre></div>
-            <div>Update: <pre>{JSON.stringify(interactionUpdate, null, '\t')}</pre></div>
+            <div>Created: <JsonComponent data={createInteraction} /></div>
+            <div>Get: <JsonComponent data={interactionGet} /></div>
+            <div>Update: <JsonComponent data={interactionUpdate} /></div>
         </div>
     );
 }

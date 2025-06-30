@@ -2,8 +2,29 @@
 
 import {ChangeEvent, useContext, useState} from "react";
 import {Corti} from "@corti/core";
-import {AuthContext} from "@/app/AuthContext";
-import {useInteraction} from "@/app/useInteraction";
+import {AuthContext} from "@/common/AuthContext";
+import {useInteraction} from "@/common/useInteraction";
+import {JsonComponent} from "@/common/JsonComponents";
+
+async function convertStreamToBlob(
+    stream: ReadableStream<Uint8Array>,
+    mimeType: string = 'audio/mpeg'
+): Promise<Blob> {
+    const reader = stream.getReader();
+    const chunks: Uint8Array[] = [];
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value!);
+        }
+    } finally {
+        reader.releaseLock();
+    }
+
+    return new Blob(chunks, { type: mimeType });
+}
 
 export default function Page() {
     const [file, setFile] = useState<Corti.ResponseRecordingCreate | null>(null);
@@ -34,18 +55,15 @@ export default function Page() {
         const fileData = await cortiClient.recordings.get(interaction.id, file.recordingId);
 
         const anchor: HTMLAnchorElement = document.createElement('a');
-        const isString = typeof fileData === 'string';
-        // @ts-expect-error : recording doesn't generate Blob yet
-        const url = isString ? fileData : URL.createObjectURL(fileData);
+        const blob = await convertStreamToBlob(fileData);
+        const url = URL.createObjectURL(blob);
         anchor.href = url;
         anchor.download = 'file.mp3';
         anchor.target = '_blank';
         anchor.click();
         anchor.remove();
 
-        if (!isString) {
-            URL.revokeObjectURL(url);
-        }
+        URL.revokeObjectURL(url);
     }
 
     async function handleDelete() {
@@ -63,7 +81,7 @@ export default function Page() {
     return (
         <div>
             <input name={'file'} type={'file'} onChange={handleFileUpload} />
-            {file && <div>Recording uploaded: <pre>{JSON.stringify(file, null, 2)}</pre></div>}
+            {file && <div>Recording uploaded: <JsonComponent data={file} /></div>}
             {file && <button onClick={handleDownload}>Download file back</button>}
             {file && <button onClick={handleDelete}>Delete recording</button>}
         </div>

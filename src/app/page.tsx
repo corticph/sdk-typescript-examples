@@ -19,6 +19,10 @@ export default function Home() {
                 <div><Link href={'/examples/records'}>/records</Link></div>
                 <div><Link href={'/examples/stream'}>/stream</Link></div>
                 <div><Link href={'/examples/transcribe'}>/transcribe</Link></div>
+                <div><Link href={'/examples/templates'}>/templates</Link></div>
+                <div><Link href={'/examples/facts'}>/facts</Link></div>
+                <div><Link href={'/examples/documents'}>/documents</Link></div>
+                <div><Link href={'/examples/transcripts'}>/transcripts</Link></div>
             </div>
         )
     }
