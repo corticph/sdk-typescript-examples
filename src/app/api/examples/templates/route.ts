@@ -1,0 +1,47 @@
+import {NextResponse} from "next/server";
+import {CortiClient, CortiEnvironment} from "@corti/core";
+import {devEnvironment} from "@/dev/devEnvironment";
+
+export async function GET() {
+    try {
+        const client = new CortiClient({
+            tenantName: process.env.NEXT_PUBLIC_TENANT_NAME!,
+            environment: devEnvironment,
+            // environment: CortiEnvironment.Eu,
+            auth: {
+                clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
+                clientSecret: process.env.CLIENT_SECRET!,
+            },
+        });
+
+        // Get all templates
+        const allTemplates = await client.templates.list();
+
+        // Get template sections with filters
+        const filteredSections = await client.templates.sectionsList({
+            lang: 'en'
+        });
+
+        // Get a specific template by key (if any templates exist)
+        let specificTemplate = null;
+
+        if (allTemplates.data && allTemplates.data.length > 0) {
+            const firstTemplate = allTemplates.data[0];
+
+            if (firstTemplate.key) {
+                specificTemplate = await client.templates.get(firstTemplate.key);
+            }
+        }
+
+        return NextResponse.json({
+            allTemplates,
+            filteredSections,
+            specificTemplate,
+            message: "Example of templates API operations"
+        });
+    } catch (error) {
+        return NextResponse.json({
+            error: error,
+        });
+    }
+} 

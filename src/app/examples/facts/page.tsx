@@ -1,0 +1,115 @@
+'use client';
+
+import {useContext, useEffect, useState} from "react";
+import { Corti } from "@corti/core";
+import {AuthContext} from "@/common/AuthContext";
+import {JsonComponent} from "@/common/JsonComponents";
+
+export default function Page() {
+    const { cortiClient } = useContext(AuthContext);
+
+    const [factsGroups, setFactsGroups] = useState<Corti.ResponseFactGroupsFiltered | null>(null);
+    const [listResponse, setListResponse] = useState<Corti.ResponseFactsList | null>(null);
+    const [createdFacts, setCreatedFacts] = useState<Corti.ResponseFactsCreate | null>(null);
+    const [updatedFacts, setUpdatedFacts] = useState<Corti.ResponseFactUpdate | null>(null);
+    const [batchUpdate, setBatchUpdate] = useState<Corti.ResponseFactsUpdate | null>(null);
+    const [interaction, setInteraction] = useState<Corti.ResponseInteractionCreate | null>(null);
+
+    const handleUpdate = async () => {
+        setFactsGroups(null);
+        setListResponse(null);
+        setCreatedFacts(null);
+        setUpdatedFacts(null);
+        setBatchUpdate(null);
+        setInteraction(null);
+
+        if (!cortiClient) return;
+
+        try {
+            // Create interaction
+            const interactionResponse = await cortiClient.interactions.create({
+                encounter: {
+                    identifier: Date.now().toString(),
+                    status: 'planned',
+                    type: 'first_consultation',
+                },
+                patient: {
+                    identifier: Date.now().toString(),
+                    gender: 'unknown'
+                }
+            });
+            setInteraction(interactionResponse);
+
+            // Get fact groups
+            const factsGroupsResponse = await cortiClient.facts.factgroupsList();
+            setFactsGroups(factsGroupsResponse);
+
+            // List facts (should be empty initially)
+            const listResponseData = await cortiClient.facts.list(interactionResponse.interactionId);
+            setListResponse(listResponseData);
+
+            // Create facts
+            const createdFactsResponse = await cortiClient.facts.create(interactionResponse.interactionId, {
+                facts: [{
+                    text: "Patient has trouble breathing",
+                    group: "history-of-present-illness"
+                }, {
+                    text: "Patient is experiencing chest pain",
+                    group: "allergies"
+                }]
+            });
+            setCreatedFacts(createdFactsResponse);
+
+            // Update a fact
+            if (createdFactsResponse.facts && createdFactsResponse.facts[0]?.id) {
+                const updatedFactsResponse = await cortiClient.facts.update(
+                    interactionResponse.interactionId, 
+                    createdFactsResponse.facts[0].id,
+                    {
+                        text: "Patient has severe trouble breathing",
+                        source: "user"
+                    }
+                );
+                setUpdatedFacts(updatedFactsResponse);
+
+                // Batch update facts
+                if (createdFactsResponse.facts[1]?.id) {
+                    const batchUpdateResponse = await cortiClient.facts.batchUpdate(interactionResponse.interactionId, {
+                        facts: [
+                            {
+                                factId: createdFactsResponse.facts[0].id,
+                                text: "Patient has minor trouble breathing",
+                            },
+                            {
+                                factId: createdFactsResponse.facts[1].id,
+                                text: "Patient is experiencing severe chest pain",
+                            }
+                        ]
+                    });
+                    setBatchUpdate(batchUpdateResponse);
+                }
+            }
+
+            // Clean up - delete the interaction
+            await cortiClient.interactions.delete(interactionResponse.interactionId);
+        } catch (error) {
+            console.error('Error fetching facts:', error);
+        }
+    }
+
+    useEffect(() => {
+        void handleUpdate();
+    }, []);
+
+    return (
+        <div>
+            <button onClick={handleUpdate}>Update again</button>
+            <div>Interaction: <JsonComponent data={interaction} /></div>
+            <div>Fact Groups: <JsonComponent data={factsGroups} /></div>
+            <div>List Response: <JsonComponent data={listResponse} /></div>
+            <div>Created Facts: <JsonComponent data={createdFacts} /></div>
+            <div>Updated Facts: <JsonComponent data={updatedFacts} /></div>
+            <div>Batch Update: <JsonComponent data={batchUpdate} /></div>
+        </div>
+    );
+} 
