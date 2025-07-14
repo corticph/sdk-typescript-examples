@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { CortiClient, CortiEnvironment } from '@corti/sdk';
-import { createReadStream } from 'node:fs';
+import { readFileSync } from 'node:fs';
 
 export async function GET() {
     try {
@@ -24,17 +24,13 @@ export async function GET() {
                 gender: 'unknown'
             }
         });
-        const file = createReadStream('public/trouble-breathing.mp3', {
-            autoClose: true
-        });
-        const recording = await client.recordings.upload(file, interaction.interactionId);
+        const buffer = readFileSync('public/trouble-breathing.mp3');
+        const blob = new Blob([buffer], { type: 'audio/mpeg' });
+
+        // @ts-expect-error Blob is differently typed
+        const recording = await client.recordings.upload(blob, interaction.interactionId);
 
         const list = await client.transcripts.list(interaction.interactionId);
-        const collectedData = [];
-
-        for await (const item of list) {
-            collectedData.push(item);
-        }
 
         const createdTranscript = await client.transcripts.create(interaction.interactionId, {
             recordingId: recording.recordingId,
@@ -51,7 +47,7 @@ export async function GET() {
         await client.interactions.delete(interaction.interactionId);
 
         return NextResponse.json({
-            list: collectedData.length,
+            list,
             createdTranscript,
             getTranscript,
         });

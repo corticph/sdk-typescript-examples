@@ -11,9 +11,9 @@ export async function GET(request: NextRequest) {
         });
 
         const token = await auth.refreshToken({
-            client_id: process.env.NEXT_PUBLIC_CLIENT_ID!,
-            client_secret: process.env.CLIENT_SECRET!,
-            refresh_token: searchParams.get('refresh_token') || '',
+            clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
+            clientSecret: process.env.CLIENT_SECRET!,
+            refreshToken: searchParams.get('refresh_token') || '',
         });
 
         return NextResponse.json(token);

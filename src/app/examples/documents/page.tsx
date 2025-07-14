@@ -8,11 +8,11 @@ import { JsonComponent } from '@/common/JsonComponents';
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
 
-    const [interaction, setInteraction] = useState<Corti.ResponseInteractionCreate | null>(null);
-    const [documentsList, setDocumentsList] = useState<Corti.ResponseDocumentList | null>(null);
-    const [createdDocument, setCreatedDocument] = useState<Corti.ResponseDocumentRead | null>(null);
-    const [retrievedDocument, setRetrievedDocument] = useState<Corti.ResponseDocumentRead | null>(null);
-    const [updatedDocument, setUpdatedDocument] = useState<Corti.ResponseDocumentRead | null>(null);
+    const [interaction, setInteraction] = useState<Corti.InteractionsCreateResponse | null>(null);
+    const [documentsList, setDocumentsList] = useState<Corti.DocumentsListResponse | null>(null);
+    const [createdDocument, setCreatedDocument] = useState<Corti.DocumentsGetResponse | null>(null);
+    const [retrievedDocument, setRetrievedDocument] = useState<Corti.DocumentsGetResponse | null>(null);
+    const [updatedDocument, setUpdatedDocument] = useState<Corti.DocumentsGetResponse | null>(null);
 
     const handleUpdate = async () => {
         setInteraction(null);

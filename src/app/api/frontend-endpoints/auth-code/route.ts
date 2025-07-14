@@ -11,10 +11,10 @@ export async function GET(request: NextRequest) {
         });
 
         const token = await auth.getCodeFlowToken({
-            client_id: process.env.NEXT_PUBLIC_CLIENT_ID!,
-            client_secret: process.env.CLIENT_SECRET!,
+            clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
+            clientSecret: process.env.CLIENT_SECRET!,
             code: searchParams.get('code') || '',
-            redirect_uri: 'http://localhost:3000/callback',
+            redirectUri: 'http://localhost:3000/callback',
         });
 
         return NextResponse.json(token);

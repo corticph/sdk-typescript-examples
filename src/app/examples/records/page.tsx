@@ -6,28 +6,8 @@ import { AuthContext } from '@/common/AuthContext';
 import { useInteraction } from '@/common/useInteraction';
 import { JsonComponent } from '@/common/JsonComponents';
 
-async function convertStreamToBlob(
-    stream: ReadableStream<Uint8Array>,
-    mimeType: string = 'audio/mpeg'
-): Promise<Blob> {
-    const reader = stream.getReader();
-    const chunks: Uint8Array[] = [];
-
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value!);
-        }
-    } finally {
-        reader.releaseLock();
-    }
-
-    return new Blob(chunks, { type: mimeType });
-}
-
 export default function Page() {
-    const [file, setFile] = useState<Corti.ResponseRecordingCreate | null>(null);
+    const [file, setFile] = useState<Corti.RecordingsCreateResponse | null>(null);
     const { cortiClient } = useContext(AuthContext);
     const { interaction, setInteraction } = useInteraction();
 
@@ -53,9 +33,9 @@ export default function Page() {
         }
 
         const fileData = await cortiClient.recordings.get(interaction.id, file.recordingId);
+        const blob  = await fileData.blob();
 
         const anchor: HTMLAnchorElement = document.createElement('a');
-        const blob = await convertStreamToBlob(fileData);
         const url = URL.createObjectURL(blob);
         anchor.href = url;
         anchor.download = 'file.mp3';

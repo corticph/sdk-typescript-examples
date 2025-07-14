@@ -8,10 +8,10 @@ import { JsonComponent } from '@/common/JsonComponents';
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
 
-    const [allTemplates, setAllTemplates] = useState<Corti.ResponseAllTemplates | null>(null);
-    const [filteredTemplates, setFilteredTemplates] = useState<Corti.ResponseAllTemplates | null>(null);
-    const [templateSections, setTemplateSections] = useState<Corti.ResponseAllTemplateSections | null>(null);
-    const [specificTemplate, setSpecificTemplate] = useState<Corti.TemplateFiltered | null>(null);
+    const [allTemplates, setAllTemplates] = useState<Corti.TemplatesListResponse | null>(null);
+    const [filteredTemplates, setFilteredTemplates] = useState<Corti.TemplatesListResponse | null>(null);
+    const [templateSections, setTemplateSections] = useState<Corti.TemplatesSectionListResponse | null>(null);
+    const [specificTemplate, setSpecificTemplate] = useState<Corti.TemplatesItem | null>(null);
 
     const handleUpdate = async () => {
         setAllTemplates(null);
@@ -31,7 +31,7 @@ export default function Page() {
             });
             setFilteredTemplates(filteredTemplatesResponse);
 
-            const templateSectionsResponse = await cortiClient.templates.sectionsList();
+            const templateSectionsResponse = await cortiClient.templates.sectionList();
             setTemplateSections(templateSectionsResponse);
 
             if (allTemplatesResponse.data && allTemplatesResponse.data.length > 0) {

@@ -8,12 +8,12 @@ import { JsonComponent } from '@/common/JsonComponents';
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
 
-    const [factsGroups, setFactsGroups] = useState<Corti.ResponseFactGroupsFiltered | null>(null);
-    const [listResponse, setListResponse] = useState<Corti.ResponseFactsList | null>(null);
-    const [createdFacts, setCreatedFacts] = useState<Corti.ResponseFactsCreate | null>(null);
-    const [updatedFacts, setUpdatedFacts] = useState<Corti.ResponseFactUpdate | null>(null);
-    const [batchUpdate, setBatchUpdate] = useState<Corti.ResponseFactsUpdate | null>(null);
-    const [interaction, setInteraction] = useState<Corti.ResponseInteractionCreate | null>(null);
+    const [factsGroups, setFactsGroups] = useState<Corti.FactsFactGroupsListResponse | null>(null);
+    const [listResponse, setListResponse] = useState<Corti.FactsListResponse | null>(null);
+    const [createdFacts, setCreatedFacts] = useState<Corti.FactsCreateResponse | null>(null);
+    const [updatedFacts, setUpdatedFacts] = useState<Corti.FactsUpdateResponse | null>(null);
+    const [batchUpdate, setBatchUpdate] = useState<Corti.FactsBatchUpdateResponse | null>(null);
+    const [interaction, setInteraction] = useState<Corti.InteractionsCreateResponse | null>(null);
 
     const handleUpdate = async () => {
         setFactsGroups(null);
@@ -39,7 +39,7 @@ export default function Page() {
             });
             setInteraction(interactionResponse);
 
-            const factsGroupsResponse = await cortiClient.facts.factgroupsList();
+            const factsGroupsResponse = await cortiClient.facts.factGroupsList();
             setFactsGroups(factsGroupsResponse);
 
             const listResponseData = await cortiClient.facts.list(interactionResponse.interactionId);

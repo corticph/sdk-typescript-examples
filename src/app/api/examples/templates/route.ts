@@ -16,7 +16,7 @@ export async function GET() {
         const allTemplates = await client.templates.list();
 
         // Get template sections with filters
-        const filteredSections = await client.templates.sectionsList({
+        const filteredSections = await client.templates.sectionList({
             lang: 'en'
         });
 

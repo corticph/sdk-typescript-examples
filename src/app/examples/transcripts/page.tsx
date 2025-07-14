@@ -10,10 +10,10 @@ export default function Page() {
     const { cortiClient } = useContext(AuthContext);
     const { interaction } = useInteraction();
 
-    const [recording, setRecording] = useState<Corti.ResponseRecordingCreate | null>(null);
-    const [transcriptsList, setTranscriptsList] = useState<Corti.ResponseTranscriptListAllTranscriptsItem[] | null>(null);
-    const [createdTranscript, setCreatedTranscript] = useState<Corti.ResponseTranscriptCreate | null>(null);
-    const [getTranscript, setGetTranscript] = useState<Corti.ResponseTranscriptCreate | null>(null);
+    const [recording, setRecording] = useState<Corti.RecordingsCreateResponse | null>(null);
+    const [transcriptsList, setTranscriptsList] = useState<Corti.TranscriptsListResponse | null>(null);
+    const [createdTranscript, setCreatedTranscript] = useState<Corti.TranscriptsResponse | null>(null);
+    const [getTranscript, setGetTranscript] = useState<Corti.TranscriptsResponse | null>(null);
     const [deleted, setDeleted] = useState<boolean>(false);
     const [error, setError] = useState<unknown>(null);
     const [loading, setLoading] = useState(false);
@@ -43,11 +43,8 @@ export default function Page() {
             setRecording(recordingRes);
 
             const list = await cortiClient.transcripts.list(interaction.id);
-            const collectedData = [];
-            for await (const item of list) {
-                collectedData.push(item);
-            }
-            setTranscriptsList(collectedData);
+
+            setTranscriptsList(list);
 
             const createdTranscriptRes = await cortiClient.transcripts.create(interaction.id, {
                 recordingId: recordingRes.recordingId,
@@ -84,4 +81,4 @@ export default function Page() {
             {error ? <div>Error: <JsonComponent data={error} /></div> : null}
         </div>
     );
-} 
+}

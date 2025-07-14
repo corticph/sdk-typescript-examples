@@ -4,7 +4,7 @@ import { Corti } from '@corti/sdk';
 
 export function useInteraction() {
     const { cortiClient } = useContext(AuthContext);
-    const [interaction, setInteraction] = useState<Corti.ResponseInteraction | null>(null);
+    const [interaction, setInteraction] = useState<Corti.InteractionsGetResponse | null>(null);
 
     useEffect(() => {
         if (!cortiClient) return;
