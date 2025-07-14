@@ -31,8 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         await auth.authorizeURL({
-            client_id: process.env.NEXT_PUBLIC_CLIENT_ID!,
-            redirect_uri: 'http://localhost:3000/callback',
+            clientId: process.env.NEXT_PUBLIC_CLIENT_ID!,
+            redirectUri: 'http://localhost:3000/callback',
         });
     }
 

@@ -7,7 +7,14 @@ import { Corti, CortiClient } from '@corti/sdk';
 import { JsonComponent } from '@/common/JsonComponents';
 
 type StreamSocket = Awaited<ReturnType<CortiClient['stream']['connect']>>
-type Messages = Corti.stream.StreamSocket.Response | Corti.StreamEndMessage;
+type Messages =
+    | Corti.StreamConfigStatusMessage
+    | Corti.StreamTranscriptMessage
+    | Corti.StreamFactsMessage
+    | Corti.StreamEndedMessage
+    | Corti.StreamUsageMessage
+    | Corti.StreamErrorMessage
+    | Corti.StreamEndMessage;
 
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
@@ -28,6 +35,18 @@ export default function Page() {
 
         const ws = await cortiClient.stream.connect({
             id: interaction.id,
+        }, {
+            transcription: {
+                primaryLanguage: 'en',
+                participants: [{
+                    channel: 0,
+                    role: 'patient'
+                }]
+            },
+            mode: {
+                type: 'facts',
+                outputLocale: 'en',
+            }
         });
 
         ws.on('message', (message) => {
@@ -35,10 +54,6 @@ export default function Page() {
 
             if (message.type === 'CONFIG_ACCEPTED') {
                 setActionsAvailable(true);
-            }
-
-            if (message.type === 'ENDED') {
-                ws.close();
             }
         });
         ws.on('error', (error) => {
@@ -49,20 +64,6 @@ export default function Page() {
         });
         ws.on('open', () => {
             setStatus('opened');
-
-            ws.sendConfiguration({
-                type: 'config',
-                configuration: {
-                    transcription: {
-                        primaryLanguage: 'en',
-                        participants: []
-                    },
-                    mode: {
-                        type: 'facts',
-                        outputLocale: 'en',
-                    }
-                }
-            });
 
             setWs(ws);
         });

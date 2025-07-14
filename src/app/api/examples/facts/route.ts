@@ -24,7 +24,7 @@ export async function GET() {
             }
         });
 
-        const factsGroups = await client.facts.factgroupsList();
+        const factsGroups = await client.facts.factGroupsList();
 
         const listResponse = await client.facts.list(interaction.interactionId);
 

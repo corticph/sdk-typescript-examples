@@ -8,10 +8,10 @@ import { JsonComponent } from '@/common/JsonComponents';
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
 
-    const [interactions, setInteractions] = useState<Corti.ResponseInteraction[]>([]);
-    const [createInteraction, setCreateInteraction] = useState<Corti.ResponseInteractionCreate | null>(null);
-    const [interactionGet, setInteractionGet] = useState<Corti.ResponseInteraction | null>(null);
-    const [interactionUpdate, setInteractionUpdate] = useState<Corti.ResponseInteraction | null>(null);
+    const [interactions, setInteractions] = useState<Corti.InteractionsGetResponse[]>([]);
+    const [createInteraction, setCreateInteraction] = useState<Corti.InteractionsCreateResponse | null>(null);
+    const [interactionGet, setInteractionGet] = useState<Corti.InteractionsGetResponse | null>(null);
+    const [interactionUpdate, setInteractionUpdate] = useState<Corti.InteractionsGetResponse | null>(null);
 
     const handleUpdate = async () => {
         setInteractions([]);

@@ -7,7 +7,14 @@ import { JsonComponent } from '@/common/JsonComponents';
 import { Corti, CortiClient } from '@corti/sdk';
 
 type TranscribeSocket = Awaited<ReturnType<CortiClient['transcribe']['connect']>>
-type Messages = Corti.transcribe.TranscribeSocket.Response | Corti.TranscribeEndMessage;
+type Messages =
+    Corti.TranscribeConfigStatusMessage
+    | Corti.TranscribeUsageMessage
+    | Corti.TranscribeEndedMessage
+    | Corti.TranscribeErrorMessage
+    | Corti.TranscribeTranscriptMessage
+    | Corti.TranscribeCommandMessage
+    | Corti.TranscribeEndMessage;
 
 export default function Page() {
     const { cortiClient } = useContext(AuthContext);
@@ -27,17 +34,15 @@ export default function Page() {
 
         setStatus('connecting');
 
-        const ws = await cortiClient.transcribe.connect();
+        const ws = await cortiClient.transcribe.connect(undefined, {
+            primaryLanguage: 'en',
+        });
 
         ws.on('message', (message) => {
             setMessages(messages => ([...messages, message]));
 
             if (message.type === 'CONFIG_ACCEPTED') {
                 setActionsAvailable(true);
-            }
-
-            if (message.type === 'ended') {
-                ws.close();
             }
         });
         ws.on('error', (error) => {
@@ -48,13 +53,6 @@ export default function Page() {
         });
         ws.on('open', () => {
             setStatus('opened');
-
-            ws.sendConfiguration({
-                type: 'config',
-                configuration: {
-                    primaryLanguage: 'en'
-                },
-            });
 
             setWs(ws);
         });
