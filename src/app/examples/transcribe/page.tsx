@@ -34,8 +34,10 @@ export default function Page() {
 
         setStatus('connecting');
 
-        const ws = await cortiClient.transcribe.connect(undefined, {
-            primaryLanguage: 'en',
+        const ws = await cortiClient.transcribe.connect({
+            configuration: {
+                primaryLanguage: 'en'
+            },
         });
 
         ws.on('message', (message) => {
