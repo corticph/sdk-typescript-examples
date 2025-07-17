@@ -35,17 +35,18 @@ export default function Page() {
 
         const ws = await cortiClient.stream.connect({
             id: interaction.id,
-        }, {
-            transcription: {
-                primaryLanguage: 'en',
-                participants: [{
-                    channel: 0,
-                    role: 'patient'
-                }]
-            },
-            mode: {
-                type: 'facts',
-                outputLocale: 'en',
+            configuration: {
+                transcription: {
+                    primaryLanguage: 'en',
+                    participants: [{
+                        channel: 0,
+                        role: 'patient'
+                    }]
+                },
+                mode: {
+                    type: 'facts',
+                    outputLocale: 'en',
+                }
             }
         });
 

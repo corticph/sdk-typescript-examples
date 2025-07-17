@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { CortiClient, CortiEnvironment } from '@corti/sdk';
-import { createWriteStream, readFileSync } from 'node:fs';
+import { createReadStream, createWriteStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { finished } from 'stream/promises';
 import { ReadableStream } from 'node:stream/web';
@@ -26,11 +26,11 @@ export async function GET() {
 
         const recordsList = await client.recordings.list(interaction.interactionId);
 
-        const buffer = readFileSync('public/trouble-breathing.mp3');
-        const blob = new Blob([buffer], { type: 'audio/mpeg' });
+        const file = createReadStream('public/trouble-breathing.mp3', {
+            autoClose: true
+        });
 
-        // @ts-expect-error Blob is differently typed
-        const res = await client.recordings.upload(blob, interaction.interactionId);
+        const res = await client.recordings.upload(file, interaction.interactionId);
 
         const getResponse = await client.recordings.get(interaction.interactionId, res.recordingId);
         const webStream = getResponse.stream() as ReadableStream<Uint8Array>;
