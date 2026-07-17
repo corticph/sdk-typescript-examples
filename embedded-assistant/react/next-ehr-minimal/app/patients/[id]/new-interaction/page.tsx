@@ -7,10 +7,9 @@ import { CortiAssistantInteractionData } from "@/components/corti-assistant-type
 import { EhrSidebar } from "@/components/ehr-sidebar";
 import { BackActions } from "@/components/ehr-parts";
 import { PageShell, SectionCard } from "@/components/ui";
-import {
-  getConsultationTemplate,
-  isConsultationType,
-} from "@/lib/consultation-templates";
+import { getConsultationTemplate, isConsultationType } from "@/lib/consultation-templates";
+import { buildCortiAssistantVisitConfig } from "@/lib/corti-assistant-visit-config";
+import { getCortiStandardSectionIds } from "@/lib/corti-standard-sections";
 import { getPatientDetail } from "@/lib/ehr-db";
 import type { ConsultationType } from "@/lib/ehr-types";
 
@@ -40,6 +39,7 @@ export default async function NewPatientInteractionPage({
   const { patient } = detail;
   const consultationType = parseConsultationType(type);
   const template = getConsultationTemplate(consultationType);
+  const standardSectionIds = await getCortiStandardSectionIds();
 
   const interactionData: CortiAssistantInteractionData = {
     assignedUserId: null,
@@ -50,6 +50,12 @@ export default async function NewPatientInteractionPage({
       period: { startedAt: new Date().toISOString() },
     },
   };
+  const visitConfig = buildCortiAssistantVisitConfig({
+    consultationType,
+    patient,
+    reason: template.label,
+    standardSectionIds,
+  });
 
   return (
     <PageShell sidebar={<EhrSidebar activePath="/patients" />}>
@@ -60,9 +66,7 @@ export default async function NewPatientInteractionPage({
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
             Blank consultation
           </p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight">
-            {template.label}
-          </h1>
+          <h1 className="mt-2 text-3xl font-black tracking-tight">{template.label}</h1>
           <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
             {patient.fullName} · {template.description}
           </p>
@@ -70,7 +74,7 @@ export default async function NewPatientInteractionPage({
 
         <SectionCard className="p-5">
           <Suspense fallback={<CortiAssistantLoader />}>
-            <CortiAssistantPanel interactionData={interactionData} />
+            <CortiAssistantPanel interactionData={interactionData} visitConfig={visitConfig} />
           </Suspense>
         </SectionCard>
 

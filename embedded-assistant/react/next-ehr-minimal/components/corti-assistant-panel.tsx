@@ -1,11 +1,16 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { CortiAssistantShell } from "@/components/corti-assistant-shell";
+import {
+  CORTI_ASSISTANT_COMPACT_HEIGHT,
+  CortiAssistantShell,
+} from "@/components/corti-assistant-shell";
 import { type CortiAssistantInteractionData } from "@/components/corti-assistant-types";
+import type { CortiAssistantVisitConfig } from "@/lib/corti-assistant-visit-config";
 
 type CortiAssistantPanelProps = {
   interactionData: CortiAssistantInteractionData;
+  visitConfig: CortiAssistantVisitConfig;
 };
 
 const CortiAssistantPanelClient = dynamic<CortiAssistantPanelProps>(
@@ -16,7 +21,10 @@ const CortiAssistantPanelClient = dynamic<CortiAssistantPanelProps>(
   {
     ssr: false,
     loading: () => (
-      <CortiAssistantShell statusMessage="Starting Corti assistant..." height={800}>
+      <CortiAssistantShell
+        statusMessage="Starting Corti assistant..."
+        height={CORTI_ASSISTANT_COMPACT_HEIGHT}
+      >
         <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
           Preparing Corti assistant...
         </div>

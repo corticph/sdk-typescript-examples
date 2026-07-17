@@ -10,12 +10,10 @@ import { Suspense } from "react";
 import { CortiAssistantPanel } from "@/components/corti-assistant-panel";
 import { CortiAssistantLoader } from "@/components/corti-assistant-loader";
 import { getConsultationTemplate } from "@/lib/consultation-templates";
+import { buildCortiAssistantVisitConfig } from "@/lib/corti-assistant-visit-config";
+import { getCortiStandardSectionIds } from "@/lib/corti-standard-sections";
 
-export default async function NewInteractionPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function NewInteractionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const detail = getAppointmentDetail(Number(id));
 
@@ -25,6 +23,7 @@ export default async function NewInteractionPage({
 
   const { appointment, patient } = detail;
   const template = getConsultationTemplate(appointment.consultationType);
+  const standardSectionIds = await getCortiStandardSectionIds();
 
   const interactionData: CortiAssistantInteractionData = {
     assignedUserId: null,
@@ -35,6 +34,13 @@ export default async function NewInteractionPage({
       period: { startedAt: new Date().toISOString() },
     },
   };
+  const visitConfig = buildCortiAssistantVisitConfig({
+    appointmentId: appointment.id,
+    consultationType: appointment.consultationType,
+    patient,
+    reason: appointment.reason,
+    standardSectionIds,
+  });
 
   return (
     <PageShell sidebar={<EhrSidebar activePath="/appointments" />}>
@@ -46,9 +52,7 @@ export default async function NewInteractionPage({
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
               New consultation
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight">
-              {template.label}
-            </h1>
+            <h1 className="mt-2 text-3xl font-black tracking-tight">{template.label}</h1>
             <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
               {patient.fullName} · {appointment.reason} · {formatDateTime(appointment.startsAt)} ·{" "}
               {appointment.clinician}
@@ -58,7 +62,7 @@ export default async function NewInteractionPage({
 
         <SectionCard className="p-5">
           <Suspense fallback={<CortiAssistantLoader />}>
-            <CortiAssistantPanel interactionData={interactionData} />
+            <CortiAssistantPanel interactionData={interactionData} visitConfig={visitConfig} />
           </Suspense>
         </SectionCard>
 

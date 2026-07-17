@@ -1,15 +1,18 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useEffect, useMemo, type ChangeEvent, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import {
-  completeAppointmentAction,
-  type InteractionFormState,
-} from "@/app/actions";
+import { completeAppointmentAction, type InteractionFormState } from "@/app/actions";
 import {
   getConsultationFormEntryTypes,
   getConsultationTemplate,
 } from "@/lib/consultation-templates";
+import {
+  buildInitialConsultationFormFields,
+  isConsultationFormFieldName,
+  type ConsultationFormFieldName,
+  useConsultationFormStore,
+} from "@/lib/consultation-form-store";
 import type { ConsultationType } from "@/lib/ehr-types";
 import { recordEntryTypeLabel } from "@/lib/ehr-utils";
 
@@ -29,9 +32,7 @@ const initialState: InteractionFormState = {
 function fieldClass(hasError: boolean) {
   return [
     "w-full rounded-xl px-3 py-2.5",
-    hasError
-      ? "border-[hsl(var(--variant-error-border))] bg-[hsl(var(--variant-error-bg))]"
-      : "",
+    hasError ? "border-[hsl(var(--variant-error-border))] bg-[hsl(var(--variant-error-bg))]" : "",
   ]
     .join(" ")
     .trim();
@@ -42,11 +43,7 @@ function FieldError({ message }: { message?: string }) {
     return null;
   }
 
-  return (
-    <p className="mt-2 text-sm text-[hsl(var(--variant-error-text))]">
-      {message}
-    </p>
-  );
+  return <p className="mt-2 text-sm text-[hsl(var(--variant-error-text))]">{message}</p>;
 }
 
 function SoapSection({
@@ -68,9 +65,7 @@ function SoapSection({
         </div>
         <div>
           <h2 className="text-lg font-bold">{title}</h2>
-          <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-            {description}
-          </p>
+          <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{description}</p>
         </div>
       </div>
       {children}
@@ -103,27 +98,53 @@ export function ConsultationForm({
   clinician,
   reason,
 }: ConsultationFormProps) {
-  const [state, formAction] = useActionState(
-    completeAppointmentAction,
-    initialState,
-  );
+  const [state, formAction] = useActionState(completeAppointmentAction, initialState);
   const template = getConsultationTemplate(consultationType);
   const defaultEntryTypes = [...template.defaultEntryTypes];
   const formSupportedEntryTypes = getConsultationFormEntryTypes(consultationType);
   const showMaternityFields = consultationType === "prenatal";
   const optionalEntryTypes = formSupportedEntryTypes.filter(
-    (entryType) =>
-      !defaultEntryTypes.some((defaultEntryType) => defaultEntryType === entryType),
+    (entryType) => !defaultEntryTypes.some((defaultEntryType) => defaultEntryType === entryType),
   );
-  const defaultOutcomeType =
-    consultationType === "medication-review" ? "prescription" : "none";
+  const defaultOutcomeType = consultationType === "medication-review" ? "prescription" : "none";
+  const formKey = `${appointmentId ?? "new"}:${patientId}:${consultationType}`;
+  const initialFields = useMemo(
+    () =>
+      buildInitialConsultationFormFields({
+        clinician,
+        outcomeType: defaultOutcomeType,
+        reason,
+      }),
+    [clinician, defaultOutcomeType, reason],
+  );
+  const fields = useConsultationFormStore((store) => store.fields);
+  const initializeForm = useConsultationFormStore((store) => store.initializeForm);
+  const updateField = useConsultationFormStore((store) => store.updateField);
+
+  useEffect(() => {
+    initializeForm(formKey, initialFields);
+  }, [formKey, initialFields, initializeForm]);
+
+  function handleFormFieldChange(
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+  ) {
+    if (isConsultationFormFieldName(event.target.name)) {
+      updateField(event.target.name, event.target.value);
+    }
+  }
+
+  function fieldProps(fieldName: ConsultationFormFieldName) {
+    return {
+      name: fieldName,
+      onChange: handleFormFieldChange,
+      value: fields[fieldName],
+    };
+  }
 
   return (
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="patientId" value={patientId} />
-      {appointmentId ? (
-        <input type="hidden" name="appointmentId" value={appointmentId} />
-      ) : null}
+      {appointmentId ? <input type="hidden" name="appointmentId" value={appointmentId} /> : null}
       <input type="hidden" name="consultationType" value={consultationType} />
       {defaultEntryTypes.map((entryType) => (
         <input key={entryType} type="hidden" name="entryTypes" value={entryType} />
@@ -133,18 +154,15 @@ export function ConsultationForm({
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[hsl(var(--muted-foreground))]">
           {template.label}
         </p>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight">
-          Consultation record
-        </h2>
-        <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
-          {template.description}
-        </p>
+        <h2 className="mt-2 text-2xl font-bold tracking-tight">Consultation record</h2>
+        <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{template.description}</p>
       </div>
 
       <section className="rounded-2xl border border-[hsl(var(--border))] bg-background p-4 sm:p-5">
         <h2 className="text-lg font-bold">Record entries</h2>
         <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-          This consultation type creates these entries by default. Add more if the encounter needs them.
+          This consultation type creates these entries by default. Add more if the encounter needs
+          them.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {defaultEntryTypes.map((entryType) => (
@@ -186,8 +204,7 @@ export function ConsultationForm({
         <label className="block text-sm">
           <span className="mb-2 block font-semibold">Clinician</span>
           <input
-            name="clinician"
-            defaultValue={clinician}
+            {...fieldProps("clinician")}
             aria-invalid={Boolean(state.fieldErrors.clinician)}
             className={fieldClass(Boolean(state.fieldErrors.clinician))}
           />
@@ -196,8 +213,7 @@ export function ConsultationForm({
         <label className="block text-sm">
           <span className="mb-2 block font-semibold">Reason for visit</span>
           <input
-            name="reason"
-            defaultValue={reason}
+            {...fieldProps("reason")}
             aria-invalid={Boolean(state.fieldErrors.reason)}
             className={fieldClass(Boolean(state.fieldErrors.reason))}
           />
@@ -213,7 +229,7 @@ export function ConsultationForm({
         <label className="block text-sm">
           <span className="mb-2 block font-semibold">Subjective note</span>
           <textarea
-            name="subjective"
+            {...fieldProps("subjective")}
             rows={5}
             placeholder="Describe the presenting complaint, symptom history, and anything important from the patient perspective."
             aria-invalid={Boolean(state.fieldErrors.subjective)}
@@ -232,7 +248,7 @@ export function ConsultationForm({
           <label className="block text-sm">
             <span className="mb-2 block font-semibold">Objective findings</span>
             <textarea
-              name="objective"
+              {...fieldProps("objective")}
               rows={4}
               placeholder="Examination findings, observed appearance, or other objective details."
               aria-invalid={Boolean(state.fieldErrors.objective)}
@@ -245,7 +261,7 @@ export function ConsultationForm({
             <label className="block text-sm">
               <span className="mb-2 block font-semibold">Blood pressure</span>
               <input
-                name="bloodPressure"
+                {...fieldProps("bloodPressure")}
                 placeholder="e.g. 124/78"
                 aria-invalid={Boolean(state.fieldErrors.bloodPressure)}
                 className={`font-mono-data ${fieldClass(Boolean(state.fieldErrors.bloodPressure))}`}
@@ -255,7 +271,7 @@ export function ConsultationForm({
             <label className="block text-sm">
               <span className="mb-2 block font-semibold">Heart rate</span>
               <input
-                name="heartRate"
+                {...fieldProps("heartRate")}
                 type="number"
                 min="40"
                 max="180"
@@ -268,7 +284,7 @@ export function ConsultationForm({
             <label className="block text-sm">
               <span className="mb-2 block font-semibold">Temperature C</span>
               <input
-                name="temperatureC"
+                {...fieldProps("temperatureC")}
                 type="number"
                 min="34"
                 max="42"
@@ -285,7 +301,7 @@ export function ConsultationForm({
             <label className="block text-sm">
               <span className="mb-2 block font-semibold">Height cm</span>
               <input
-                name="heightCm"
+                {...fieldProps("heightCm")}
                 type="number"
                 min="40"
                 max="230"
@@ -298,7 +314,7 @@ export function ConsultationForm({
             <label className="block text-sm">
               <span className="mb-2 block font-semibold">Weight kg</span>
               <input
-                name="weightKg"
+                {...fieldProps("weightKg")}
                 type="number"
                 min="1"
                 max="350"
@@ -311,7 +327,7 @@ export function ConsultationForm({
             <label className="block text-sm">
               <span className="mb-2 block font-semibold">BMI</span>
               <input
-                name="bmi"
+                {...fieldProps("bmi")}
                 type="number"
                 min="5"
                 max="80"
@@ -334,7 +350,7 @@ export function ConsultationForm({
           <label className="block text-sm">
             <span className="mb-2 block font-semibold">Assessment</span>
             <textarea
-              name="assessment"
+              {...fieldProps("assessment")}
               rows={5}
               placeholder="Summarise the clinical impression or differential diagnosis."
               aria-invalid={Boolean(state.fieldErrors.assessment)}
@@ -352,7 +368,7 @@ export function ConsultationForm({
           <label className="block text-sm">
             <span className="mb-2 block font-semibold">Plan</span>
             <textarea
-              name="plan"
+              {...fieldProps("plan")}
               rows={5}
               placeholder="Document management, safety-netting, follow-up, and any planned actions."
               aria-invalid={Boolean(state.fieldErrors.plan)}
@@ -366,13 +382,14 @@ export function ConsultationForm({
       <section className="rounded-2xl border border-[hsl(var(--border))] bg-background p-4 sm:p-5">
         <h2 className="text-lg font-bold">Template-specific entries</h2>
         <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-          Fill the sections that match the selected consultation type or any extra entry types you added.
+          Fill the sections that match the selected consultation type or any extra entry types you
+          added.
         </p>
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <label className="block text-sm">
             <span className="mb-2 block font-semibold">Test ordered</span>
             <input
-              name="testName"
+              {...fieldProps("testName")}
               placeholder="e.g. HbA1c, FBC, urine culture"
               aria-invalid={Boolean(state.fieldErrors.testName)}
               className={fieldClass(Boolean(state.fieldErrors.testName))}
@@ -382,7 +399,7 @@ export function ConsultationForm({
           <label className="block text-sm">
             <span className="mb-2 block font-semibold">Test reason</span>
             <input
-              name="testReason"
+              {...fieldProps("testReason")}
               placeholder="Why the investigation is needed"
               aria-invalid={Boolean(state.fieldErrors.testReason)}
               className={fieldClass(Boolean(state.fieldErrors.testReason))}
@@ -392,7 +409,7 @@ export function ConsultationForm({
           <label className="block text-sm">
             <span className="mb-2 block font-semibold">Vaccine</span>
             <input
-              name="vaccine"
+              {...fieldProps("vaccine")}
               placeholder="e.g. Influenza, MMR, COVID booster"
               aria-invalid={Boolean(state.fieldErrors.vaccine)}
               className={fieldClass(Boolean(state.fieldErrors.vaccine))}
@@ -402,20 +419,20 @@ export function ConsultationForm({
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="block text-sm">
               <span className="mb-2 block font-semibold">Dose</span>
-              <input name="vaccineDose" className={fieldClass(false)} />
+              <input {...fieldProps("vaccineDose")} className={fieldClass(false)} />
             </label>
             <label className="block text-sm">
               <span className="mb-2 block font-semibold">Site</span>
-              <input name="vaccineSite" className={fieldClass(false)} />
+              <input {...fieldProps("vaccineSite")} className={fieldClass(false)} />
             </label>
             <label className="block text-sm">
               <span className="mb-2 block font-semibold">Batch</span>
-              <input name="vaccineBatch" className={fieldClass(false)} />
+              <input {...fieldProps("vaccineBatch")} className={fieldClass(false)} />
             </label>
           </div>
           <label className="block text-sm">
             <span className="mb-2 block font-semibold">Vaccination status</span>
-            <select name="vaccineStatus" defaultValue="administered" className={fieldClass(false)}>
+            <select {...fieldProps("vaccineStatus")} className={fieldClass(false)}>
               <option value="administered">Administered</option>
               <option value="planned">Planned</option>
               <option value="declined">Declined</option>
@@ -427,7 +444,7 @@ export function ConsultationForm({
                 <label className="block text-sm">
                   <span className="mb-2 block font-semibold">Gestation weeks</span>
                   <input
-                    name="gestationWeeks"
+                    {...fieldProps("gestationWeeks")}
                     type="number"
                     min="4"
                     max="43"
@@ -440,7 +457,7 @@ export function ConsultationForm({
                 <label className="block text-sm">
                   <span className="mb-2 block font-semibold">Fetal HR</span>
                   <input
-                    name="fetalHeartRate"
+                    {...fieldProps("fetalHeartRate")}
                     type="number"
                     min="80"
                     max="220"
@@ -452,7 +469,7 @@ export function ConsultationForm({
                 <label className="block text-sm">
                   <span className="mb-2 block font-semibold">Fundal height</span>
                   <input
-                    name="fundalHeightCm"
+                    {...fieldProps("fundalHeightCm")}
                     type="number"
                     min="8"
                     max="50"
@@ -466,7 +483,7 @@ export function ConsultationForm({
               <label className="block text-sm lg:col-span-2">
                 <span className="mb-2 block font-semibold">Maternity notes</span>
                 <textarea
-                  name="maternityNotes"
+                  {...fieldProps("maternityNotes")}
                   rows={3}
                   placeholder="Antenatal observations, concerns, fetal movement, or follow-up."
                   aria-invalid={Boolean(state.fieldErrors.maternityNotes)}
@@ -484,8 +501,7 @@ export function ConsultationForm({
           <label className="block text-sm">
             <span className="mb-2 block font-semibold">Outcome type</span>
             <select
-              name="outcomeType"
-              defaultValue={defaultOutcomeType}
+              {...fieldProps("outcomeType")}
               aria-invalid={Boolean(state.fieldErrors.outcomeType)}
               className={fieldClass(Boolean(state.fieldErrors.outcomeType))}
             >
@@ -499,7 +515,7 @@ export function ConsultationForm({
           <label className="block text-sm">
             <span className="mb-2 block font-semibold">Outcome details</span>
             <input
-              name="outcomeDetails"
+              {...fieldProps("outcomeDetails")}
               placeholder="Medication, destination specialty, or leave blank for advice only."
               aria-invalid={Boolean(state.fieldErrors.outcomeDetails)}
               className={fieldClass(Boolean(state.fieldErrors.outcomeDetails))}

@@ -1,25 +1,11 @@
 import { NextResponse } from "next/server";
-import { CortiAuth } from "@corti/sdk";
+import { getCortiRopcToken } from "@/lib/corti-server-auth";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const environment = process.env.CORTI_ENVIRONMENT!.trim();
-    const tenantName = process.env.CORTI_TENANT_NAME!.trim();
-    const clientId = process.env.CORTI_CLIENT_ID!.trim();
-    const username = process.env.CORTI_USER_EMAIL!.trim();
-    const password = process.env.CORTI_USER_PASSWORD!.trim();
-
-    const auth = new CortiAuth({
-      environment,
-      tenantName,
-    });
-    const tokenResponse = await auth.getRopcFlowToken({
-      clientId,
-      username,
-      password,
-    });
+    const tokenResponse = await getCortiRopcToken();
 
     return NextResponse.json({
       access_token: tokenResponse.accessToken,
@@ -30,8 +16,7 @@ export async function GET() {
       mode: "stateful",
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown authentication error";
+    const message = error instanceof Error ? error.message : "Unknown authentication error";
     console.error("Corti authentication error", error);
 
     return NextResponse.json(

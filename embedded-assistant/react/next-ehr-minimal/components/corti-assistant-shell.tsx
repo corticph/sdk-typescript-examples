@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+export const CORTI_ASSISTANT_COMPACT_HEIGHT = 500;
+
 type CortiAssistantShellProps = {
   statusMessage: string;
   statusTone?: "default" | "error";
@@ -14,7 +16,7 @@ export function CortiAssistantShell({
   statusTone = "default",
   canRetry = false,
   onRetry,
-  height = 600,
+  height = CORTI_ASSISTANT_COMPACT_HEIGHT,
   children,
 }: CortiAssistantShellProps) {
   return (

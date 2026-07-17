@@ -1,4 +1,7 @@
-import { CortiAssistantShell } from "@/components/corti-assistant-shell";
+import {
+  CORTI_ASSISTANT_COMPACT_HEIGHT,
+  CortiAssistantShell,
+} from "@/components/corti-assistant-shell";
 
 type CortiAssistantLoaderProps = {
   message?: string;
@@ -7,7 +10,7 @@ type CortiAssistantLoaderProps = {
 
 export function CortiAssistantLoader({
   message = "Loading Corti assistant…",
-  height = 600,
+  height = CORTI_ASSISTANT_COMPACT_HEIGHT,
 }: CortiAssistantLoaderProps) {
   return (
     <CortiAssistantShell statusMessage={message} height={height}>

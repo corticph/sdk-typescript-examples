@@ -1,22 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-export function PageShell({
-  sidebar,
-  children,
-}: {
-  sidebar: ReactNode;
-  children: ReactNode;
-}) {
+export function PageShell({ sidebar, children }: { sidebar: ReactNode; children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-400 min-w-0">
+      <div className="flex min-h-screen w-full min-w-0">
         <aside className="hidden w-20 shrink-0 border-r border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-background))] px-3 py-4 lg:block">
           {sidebar}
         </aside>
-        <main className="min-w-0 flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-6">
-          {children}
-        </main>
+        <main className="min-w-0 flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-6">{children}</main>
       </div>
     </div>
   );
@@ -29,11 +21,7 @@ export function SectionCard({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <section className={`surface-card min-w-0 ${className}`.trim()}>
-      {children}
-    </section>
-  );
+  return <section className={`surface-card min-w-0 ${className}`.trim()}>{children}</section>;
 }
 
 export function SidebarLink({
@@ -75,13 +63,7 @@ export function SidebarLink({
   );
 }
 
-export function PrimaryLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: ReactNode;
-}) {
+export function PrimaryLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Link
       href={href}
@@ -96,13 +78,7 @@ export function PrimaryLink({
   );
 }
 
-export function SecondaryLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: ReactNode;
-}) {
+export function SecondaryLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Link
       href={href}
@@ -155,15 +131,9 @@ export function MetricBox({
 }) {
   return (
     <div className="surface-card p-4">
-      <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
-        {label}
-      </p>
-      <p className="mt-3 font-mono-data text-3xl font-bold tracking-tight">
-        {value}
-      </p>
-      <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
-        {subtext}
-      </p>
+      <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">{label}</p>
+      <p className="mt-3 font-mono-data text-3xl font-bold tracking-tight">{value}</p>
+      <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{subtext}</p>
     </div>
   );
 }

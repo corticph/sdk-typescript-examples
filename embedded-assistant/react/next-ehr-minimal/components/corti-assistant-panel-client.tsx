@@ -3,73 +3,51 @@
 import { use, useEffect, useRef, useState } from "react";
 import {
   CortiEmbeddedReact,
+  type CortiEmbeddedEvent,
   type CortiEmbeddedReactRef,
   useCortiEmbeddedApi,
 } from "@corti/embedded-web/react";
 import { getCortiAssistantBootstrap } from "@/components/corti-assistant-bootstrap";
-import { CortiAssistantShell } from "@/components/corti-assistant-shell";
+import { CortiAssistantChecklist } from "@/components/corti-assistant-checklist";
+import {
+  CORTI_ASSISTANT_COMPACT_HEIGHT,
+  CortiAssistantShell,
+} from "@/components/corti-assistant-shell";
 import {
   type CortiAssistantInteractionData,
   type CortiAssistantStatus,
 } from "@/components/corti-assistant-types";
+import {
+  connectCortiAssistantToEhr,
+  CORTI_ASSISTANT_RECOVERY_MESSAGE,
+  getCortiAssistantErrorMessage,
+  handleCortiAssistantEventForEhr,
+} from "@/lib/corti-assistant-ehr-integration";
+import type { CortiAssistantVisitConfig } from "@/lib/corti-assistant-visit-config";
 
 const EMBEDDED_READY_TIMEOUT_MS = 20_000;
-const INTERACTION_LOADED_TIMEOUT_MS = 20_000;
-const RECOVERY_MESSAGE =
-  "Assistant is taking longer than expected to load. Check your connection, then try again.";
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Unknown error";
-}
-
-function waitForInteractionLoaded(
-  corti: CortiEmbeddedReactRef,
-  startNavigation: () => Promise<void>,
-) {
-  return new Promise<void>((resolve, reject) => {
-    let isSettled = false;
-
-    function cleanup() {
-      clearTimeout(timeoutId);
-      corti.removeEventListener("interaction.loaded", handleLoaded);
-    }
-
-    const settle = (complete: () => void) => {
-      if (isSettled) return;
-      isSettled = true;
-      cleanup();
-      complete();
-    };
-
-    const fail = (error: unknown) => {
-      settle(() => reject(error));
-    };
-
-    function handleLoaded() {
-      settle(() => resolve());
-    }
-
-    corti.addEventListener("interaction.loaded", handleLoaded, { once: true });
-
-    const timeoutId = setTimeout(() => {
-      fail(new Error(RECOVERY_MESSAGE));
-    }, INTERACTION_LOADED_TIMEOUT_MS);
-
-    void Promise.resolve().then(startNavigation).catch(fail);
-  });
-}
+const EMBEDDED_ASSISTANT_COLLAPSED_HEIGHT = 132;
 
 type CortiAssistantPanelClientProps = {
   interactionData: CortiAssistantInteractionData;
+  visitConfig: CortiAssistantVisitConfig;
 };
 
-export function CortiAssistantPanelClient({ interactionData }: CortiAssistantPanelClientProps) {
+export function CortiAssistantPanelClient({
+  interactionData,
+  visitConfig,
+}: CortiAssistantPanelClientProps) {
   const cortiRef = useRef<CortiEmbeddedReactRef>(null);
   const api = useCortiEmbeddedApi(cortiRef);
   const bootstrap = use(getCortiAssistantBootstrap());
   const readyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasInitialized = useRef(false);
   const [embedKey, setEmbedKey] = useState(0);
+  const [cheatFactsStatus, setCheatFactsStatus] = useState<"idle" | "injecting" | "injected">(
+    "idle",
+  );
+  const [isInteractionReady, setIsInteractionReady] = useState(false);
+  const [isCollapsedAfterSync, setIsCollapsedAfterSync] = useState(false);
   const [status, setStatus] = useState<CortiAssistantStatus>({
     tone: "default",
     message: "Starting Corti assistant...",
@@ -82,7 +60,7 @@ export function CortiAssistantPanelClient({ interactionData }: CortiAssistantPan
 
     const timeoutId = setTimeout(() => {
       hasInitialized.current = true;
-      setStatus({ tone: "error", message: RECOVERY_MESSAGE, canRetry: true });
+      setStatus({ tone: "error", message: CORTI_ASSISTANT_RECOVERY_MESSAGE, canRetry: true });
     }, EMBEDDED_READY_TIMEOUT_MS);
     readyTimeoutRef.current = timeoutId;
 
@@ -94,11 +72,17 @@ export function CortiAssistantPanelClient({ interactionData }: CortiAssistantPan
 
   if ("error" in bootstrap) {
     return (
-      <CortiAssistantShell statusMessage={bootstrap.error} statusTone="error">
-        <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
-          Corti assistant is unavailable.
-        </div>
-      </CortiAssistantShell>
+      <div className="relative xl:pr-[21.25rem]">
+        <CortiAssistantShell statusMessage={bootstrap.error} statusTone="error">
+          <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
+            Corti assistant is unavailable.
+          </div>
+        </CortiAssistantShell>
+        <CortiAssistantChecklist
+          templateLabel={visitConfig.templateLabel}
+          items={visitConfig.checklistItems}
+        />
+      </div>
     );
   }
 
@@ -116,47 +100,62 @@ export function CortiAssistantPanelClient({ interactionData }: CortiAssistantPan
       const corti = cortiRef.current;
       if (!corti) throw new Error("Embedded assistant not found");
 
-      corti.hide();
-
-      setStatus({ tone: "default", message: "Authenticating..." });
-      await api.auth(authData);
-
-      await api.configureApp({
-        ui: {
-          interactionTitle: true,
-          aiChat: true,
-          documentFeedback: true,
-          navigation: true,
-        },
+      setIsInteractionReady(false);
+      setCheatFactsStatus("idle");
+      setIsCollapsedAfterSync(false);
+      await connectCortiAssistantToEhr({
+        api,
+        authData,
+        corti,
+        interactionData,
+        visitConfig,
+        onStatusChange: (message) => setStatus({ tone: "default", message }),
       });
-
-      await api.setInteractionOptions({
-        mode: {
-          fallback: "in-person",
-          options: ["in-person", "virtual"],
-        },
-        documents: {
-          actions: {
-            sync: true,
-          },
-        },
-      });
-
-      setStatus({ tone: "default", message: "Creating interaction..." });
-      const interaction = await api.createInteraction(interactionData);
-
-      setStatus({ tone: "default", message: "Starting session..." });
-      await waitForInteractionLoaded(corti, () =>
-        api.navigate({ path: `/session/${interaction.id}` }),
-      );
-      corti.show();
+      setIsInteractionReady(true);
 
       setStatus({ tone: "default", message: "Corti assistant ready" });
     } catch (error) {
+      setIsInteractionReady(false);
       setStatus({
         tone: "error",
-        message: `Corti assistant error: ${getErrorMessage(error)}`,
+        message: `Corti assistant error: ${getCortiAssistantErrorMessage(error)}`,
         canRetry: true,
+      });
+    }
+  }
+
+  function handleEmbeddedEvent(event: CortiEmbeddedEvent) {
+    const corti = cortiRef.current;
+    if (!corti) {
+      return;
+    }
+
+    handleCortiAssistantEventForEhr({
+      corti,
+      event,
+      onDocumentSynced: () => {
+        setIsCollapsedAfterSync(true);
+        setStatus({ tone: "default", message: "Document synced. Assistant collapsed." });
+      },
+    });
+  }
+
+  async function handleInjectCheatFacts() {
+    if (!isInteractionReady || cheatFactsStatus === "injecting") {
+      return;
+    }
+
+    try {
+      setCheatFactsStatus("injecting");
+      setStatus({ tone: "default", message: "Injecting checklist facts..." });
+      await api.addFacts(visitConfig.cheatFacts);
+      setCheatFactsStatus("injected");
+      setStatus({ tone: "default", message: "Checklist facts injected." });
+    } catch (error) {
+      setCheatFactsStatus("idle");
+      setStatus({
+        tone: "error",
+        message: `Could not inject checklist facts: ${getCortiAssistantErrorMessage(error)}`,
       });
     }
   }
@@ -176,35 +175,78 @@ export function CortiAssistantPanelClient({ interactionData }: CortiAssistantPan
     }
 
     hasInitialized.current = false;
+    setIsInteractionReady(false);
+    setCheatFactsStatus("idle");
+    setIsCollapsedAfterSync(false);
     setStatus({ tone: "default", message: "Starting Corti assistant..." });
     setEmbedKey((key) => key + 1);
   }
 
+  function handleShowAssistant() {
+    setIsCollapsedAfterSync(false);
+    cortiRef.current?.show();
+    setStatus({ tone: "default", message: "Corti assistant ready" });
+  }
+
   return (
-    <CortiAssistantShell
-      statusMessage={status.message}
-      statusTone={status.tone}
-      canRetry={status.canRetry}
-      onRetry={handleRetry}
-      height={800}
-    >
-      <div className="relative h-full w-full">
-        {baseUrl && authData ? (
-          <CortiEmbeddedReact
-            key={embedKey}
-            ref={cortiRef}
-            baseURL={baseUrl}
-            visibility="hidden"
-            onReady={handleReady}
-            onError={handleError}
-            style={{ width: "100%", height: "100%" }}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
-            {status.message}
-          </div>
-        )}
-      </div>
-    </CortiAssistantShell>
+    <div className="relative xl:pr-[21.25rem]">
+      <CortiAssistantShell
+        statusMessage={status.message}
+        statusTone={status.tone}
+        canRetry={status.canRetry}
+        onRetry={handleRetry}
+        height={
+          isCollapsedAfterSync
+            ? EMBEDDED_ASSISTANT_COLLAPSED_HEIGHT
+            : CORTI_ASSISTANT_COMPACT_HEIGHT
+        }
+      >
+        <div className="relative h-full w-full">
+          {baseUrl && authData ? (
+            <>
+              <CortiEmbeddedReact
+                key={embedKey}
+                ref={cortiRef}
+                baseURL={baseUrl}
+                visibility="hidden"
+                onReady={handleReady}
+                onError={handleError}
+                onEvent={handleEmbeddedEvent}
+                style={{ width: "100%", height: "100%" }}
+              />
+              {isCollapsedAfterSync ? (
+                <div className="absolute inset-0 flex items-center justify-between gap-4 bg-background px-5 text-sm">
+                  <div>
+                    <p className="font-semibold">Document synced to the EHR.</p>
+                    <p className="mt-1 text-[hsl(var(--muted-foreground))]">
+                      The assistant is hidden until you need it again.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleShowAssistant}
+                    className="shrink-0 rounded-lg border border-[hsl(var(--border))] px-3 py-2 text-xs font-semibold hover:bg-[hsl(var(--muted))]"
+                  >
+                    Show assistant
+                  </button>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
+              {status.message}
+            </div>
+          )}
+        </div>
+      </CortiAssistantShell>
+      <CortiAssistantChecklist
+        templateLabel={visitConfig.templateLabel}
+        items={visitConfig.checklistItems}
+        canInjectCheatFacts={isInteractionReady}
+        hasInjectedCheatFacts={cheatFactsStatus === "injected"}
+        isInjectingCheatFacts={cheatFactsStatus === "injecting"}
+        onInjectCheatFacts={handleInjectCheatFacts}
+      />
+    </div>
   );
 }
