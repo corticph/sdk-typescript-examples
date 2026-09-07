@@ -1,15 +1,10 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { AnnualCheckupCortiAssistant } from "@/components/annual-checkup-corti-assistant";
 import { ConsultationForm } from "@/components/consultation-form";
-import { CortiAssistantLoader } from "@/components/corti-assistant-loader";
-import { CortiAssistantPanel } from "@/components/corti-assistant-panel";
-import { CortiAssistantInteractionData } from "@/components/corti-assistant-types";
 import { EhrSidebar } from "@/components/ehr-sidebar";
 import { BackActions } from "@/components/ehr-parts";
 import { PageShell, SectionCard } from "@/components/ui";
 import { getConsultationTemplate, isConsultationType } from "@/lib/consultation-templates";
-import { buildCortiAssistantVisitConfig } from "@/lib/corti-assistant-visit-config";
-import { getCortiStandardSectionIds } from "@/lib/corti-standard-sections";
 import { getPatientDetail } from "@/lib/ehr-db";
 import type { ConsultationType } from "@/lib/ehr-types";
 
@@ -39,23 +34,6 @@ export default async function NewPatientInteractionPage({
   const { patient } = detail;
   const consultationType = parseConsultationType(type);
   const template = getConsultationTemplate(consultationType);
-  const standardSectionIds = await getCortiStandardSectionIds();
-
-  const interactionData: CortiAssistantInteractionData = {
-    assignedUserId: null,
-    encounter: {
-      identifier: `patient-${patient.id}-${consultationType}-${new Date().getTime()}`,
-      status: "planned",
-      type: "first_consultation",
-      period: { startedAt: new Date().toISOString() },
-    },
-  };
-  const visitConfig = buildCortiAssistantVisitConfig({
-    consultationType,
-    patient,
-    reason: template.label,
-    standardSectionIds,
-  });
 
   return (
     <PageShell sidebar={<EhrSidebar activePath="/patients" />}>
@@ -72,11 +50,9 @@ export default async function NewPatientInteractionPage({
           </p>
         </header>
 
-        <SectionCard className="p-5">
-          <Suspense fallback={<CortiAssistantLoader />}>
-            <CortiAssistantPanel interactionData={interactionData} visitConfig={visitConfig} />
-          </Suspense>
-        </SectionCard>
+        {consultationType === "annual-checkup" ? (
+          <AnnualCheckupCortiAssistant detail={detail} />
+        ) : null}
 
         <SectionCard className="p-5">
           <ConsultationForm

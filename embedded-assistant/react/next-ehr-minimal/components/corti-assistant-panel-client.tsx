@@ -2,13 +2,13 @@
 
 import { use, useEffect, useRef, useState } from "react";
 import {
-  CortiEmbeddedReact,
   type CortiEmbeddedEvent,
   type CortiEmbeddedReactRef,
   useCortiEmbeddedApi,
 } from "@corti/embedded-web/react";
 import { getCortiAssistantBootstrap } from "@/components/corti-assistant-bootstrap";
 import { CortiAssistantChecklist } from "@/components/corti-assistant-checklist";
+import { CortiAssistantEmbed } from "@/components/corti-assistant-embed";
 import {
   CORTI_ASSISTANT_COMPACT_HEIGHT,
   CortiAssistantShell,
@@ -18,23 +18,23 @@ import {
   type CortiAssistantStatus,
 } from "@/components/corti-assistant-types";
 import {
-  connectCortiAssistantToEhr,
   CORTI_ASSISTANT_RECOVERY_MESSAGE,
   getCortiAssistantErrorMessage,
-  handleCortiAssistantEventForEhr,
+  startCortiAssistantSession,
 } from "@/lib/corti-assistant-ehr-integration";
+import { syncCortiSoapDocumentToEhr } from "@/lib/corti-assistant-sync";
 import type { CortiAssistantVisitConfig } from "@/lib/corti-assistant-visit-config";
 
 const EMBEDDED_READY_TIMEOUT_MS = 20_000;
 const EMBEDDED_ASSISTANT_COLLAPSED_HEIGHT = 132;
 
 type CortiAssistantPanelClientProps = {
-  interactionData: CortiAssistantInteractionData;
+  encounterIdentifier: string;
   visitConfig: CortiAssistantVisitConfig;
 };
 
 export function CortiAssistantPanelClient({
-  interactionData,
+  encounterIdentifier,
   visitConfig,
 }: CortiAssistantPanelClientProps) {
   const cortiRef = useRef<CortiEmbeddedReactRef>(null);
@@ -103,13 +103,22 @@ export function CortiAssistantPanelClient({
       setIsInteractionReady(false);
       setCheatFactsStatus("idle");
       setIsCollapsedAfterSync(false);
-      await connectCortiAssistantToEhr({
+      setStatus({ tone: "default", message: "Starting Corti assistant..." });
+      const interactionData: CortiAssistantInteractionData = {
+        assignedUserId: null,
+        encounter: {
+          identifier: `${encounterIdentifier}-${Date.now()}`,
+          status: "planned",
+          type: "first_consultation",
+          period: { startedAt: new Date().toISOString() },
+        },
+      };
+      await startCortiAssistantSession({
         api,
         authData,
         corti,
         interactionData,
         visitConfig,
-        onStatusChange: (message) => setStatus({ tone: "default", message }),
       });
       setIsInteractionReady(true);
 
@@ -130,14 +139,11 @@ export function CortiAssistantPanelClient({
       return;
     }
 
-    handleCortiAssistantEventForEhr({
-      corti,
-      event,
-      onDocumentSynced: () => {
-        setIsCollapsedAfterSync(true);
-        setStatus({ tone: "default", message: "Document synced. Assistant collapsed." });
-      },
-    });
+    if (!syncCortiSoapDocumentToEhr(event)) return;
+
+    corti.hide();
+    setIsCollapsedAfterSync(true);
+    setStatus({ tone: "default", message: "Document synced. Assistant collapsed." });
   }
 
   async function handleInjectCheatFacts() {
@@ -204,15 +210,13 @@ export function CortiAssistantPanelClient({
         <div className="relative h-full w-full">
           {baseUrl && authData ? (
             <>
-              <CortiEmbeddedReact
-                key={embedKey}
+              <CortiAssistantEmbed
                 ref={cortiRef}
-                baseURL={baseUrl}
-                visibility="hidden"
+                baseUrl={baseUrl}
+                embedKey={embedKey}
                 onReady={handleReady}
                 onError={handleError}
                 onEvent={handleEmbeddedEvent}
-                style={{ width: "100%", height: "100%" }}
               />
               {isCollapsedAfterSync ? (
                 <div className="absolute inset-0 flex items-center justify-between gap-4 bg-background px-5 text-sm">

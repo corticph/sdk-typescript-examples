@@ -1,17 +1,12 @@
 import { notFound } from "next/navigation";
+import { AnnualCheckupCortiAssistant } from "@/components/annual-checkup-corti-assistant";
 import { ConsultationForm } from "@/components/consultation-form";
 import { EhrSidebar } from "@/components/ehr-sidebar";
 import { BackActions } from "@/components/ehr-parts";
 import { PageShell, SectionCard } from "@/components/ui";
 import { getAppointmentDetail } from "@/lib/ehr-db";
 import { formatDateTime } from "@/lib/ehr-utils";
-import { CortiAssistantInteractionData } from "@/components/corti-assistant-types";
-import { Suspense } from "react";
-import { CortiAssistantPanel } from "@/components/corti-assistant-panel";
-import { CortiAssistantLoader } from "@/components/corti-assistant-loader";
 import { getConsultationTemplate } from "@/lib/consultation-templates";
-import { buildCortiAssistantVisitConfig } from "@/lib/corti-assistant-visit-config";
-import { getCortiStandardSectionIds } from "@/lib/corti-standard-sections";
 
 export default async function NewInteractionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,24 +18,6 @@ export default async function NewInteractionPage({ params }: { params: Promise<{
 
   const { appointment, patient } = detail;
   const template = getConsultationTemplate(appointment.consultationType);
-  const standardSectionIds = await getCortiStandardSectionIds();
-
-  const interactionData: CortiAssistantInteractionData = {
-    assignedUserId: null,
-    encounter: {
-      identifier: `appointment-${appointment.id}-${new Date().getTime()}`,
-      status: "planned",
-      type: "first_consultation",
-      period: { startedAt: new Date().toISOString() },
-    },
-  };
-  const visitConfig = buildCortiAssistantVisitConfig({
-    appointmentId: appointment.id,
-    consultationType: appointment.consultationType,
-    patient,
-    reason: appointment.reason,
-    standardSectionIds,
-  });
 
   return (
     <PageShell sidebar={<EhrSidebar activePath="/appointments" />}>
@@ -60,11 +37,9 @@ export default async function NewInteractionPage({ params }: { params: Promise<{
           </div>
         </header>
 
-        <SectionCard className="p-5">
-          <Suspense fallback={<CortiAssistantLoader />}>
-            <CortiAssistantPanel interactionData={interactionData} visitConfig={visitConfig} />
-          </Suspense>
-        </SectionCard>
+        {appointment.consultationType === "annual-checkup" ? (
+          <AnnualCheckupCortiAssistant detail={detail} />
+        ) : null}
 
         <SectionCard className="p-5">
           <ConsultationForm

@@ -5,11 +5,10 @@ import {
   CORTI_ASSISTANT_COMPACT_HEIGHT,
   CortiAssistantShell,
 } from "@/components/corti-assistant-shell";
-import { type CortiAssistantInteractionData } from "@/components/corti-assistant-types";
 import type { CortiAssistantVisitConfig } from "@/lib/corti-assistant-visit-config";
 
 type CortiAssistantPanelProps = {
-  interactionData: CortiAssistantInteractionData;
+  encounterIdentifier: string;
   visitConfig: CortiAssistantVisitConfig;
 };
 

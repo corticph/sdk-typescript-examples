@@ -1,64 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { buildConsultationFormPrefillFields } from "@/lib/corti-assistant-sync";
+import { mapCortiSoapDocumentToEhrFields } from "@/lib/corti-assistant-sync";
+import { CORTI_SOAP_SECTIONS } from "@/lib/corti-soap-template";
 
 describe("corti assistant document sync", () => {
-  it("splits output schema key-value text across the expected form fields", () => {
-    const fields = buildConsultationFormPrefillFields({
-      document: {
-        sections: [
-          {
-            labels: [{ key: "ehr.formFields", value: "outcomeType,outcomeDetails" }],
-            structuredOutput: "outcomeType=referral\noutcomeDetails=Urgent antenatal assessment\n",
-          },
-        ],
-      },
-    });
+  it("maps schema-driven SOAP section UUIDs to EHR fields", () => {
+    const sections = CORTI_SOAP_SECTIONS.map((section) => ({
+      key: section.id,
+      text: `${section.title} content`,
+    }));
 
-    expect(fields).toEqual({
-      outcomeType: "referral",
-      outcomeDetails: "Urgent antenatal assessment",
+    expect(mapCortiSoapDocumentToEhrFields({ document: { sections } })).toEqual({
+      subjective: "Subjective content",
+      objective: "Objective content",
+      assessment: "Assessment content",
+      plan: "Actions and Plan content",
     });
   });
 
-  it("does not write a whole key-value block into a single form field", () => {
-    const fields = buildConsultationFormPrefillFields({
-      document: {
-        sections: [
-          {
-            labels: [{ key: "ehr.formFields", value: "outcomeType,outcomeDetails" }],
-            structuredOutput: {
-              outcomeType: "outcomeType=prescription \\ outcomeDetails=Folic acid",
-            },
-          },
-        ],
-      },
-    });
-
-    expect(fields).toEqual({
-      outcomeType: "prescription",
-      outcomeDetails: "Folic acid",
-    });
-  });
-
-  it("keeps single-field sections on their matching form field", () => {
-    const fields = buildConsultationFormPrefillFields({
-      document: {
-        sections: [
-          {
-            labels: [{ key: "ehr.formFields", value: "plan" }],
-            structuredOutput: { plan: "Follow up in two weeks" },
-          },
-          {
-            labels: [{ key: "ehr.formFields", value: "objective" }],
-            structuredOutput: { objective: "Fundal height appropriate for gestation" },
-          },
-        ],
-      },
-    });
-
-    expect(fields).toEqual({
-      plan: "Follow up in two weeks",
-      objective: "Fundal height appropriate for gestation",
-    });
+  it("ignores sections outside the fixed SOAP mapping", () => {
+    expect(
+      mapCortiSoapDocumentToEhrFields({
+        document: {
+          sections: [
+            { key: "00000000-0000-0000-0000-000000000000", text: "Unknown content" },
+          ],
+        },
+      }),
+    ).toEqual({});
   });
 });
