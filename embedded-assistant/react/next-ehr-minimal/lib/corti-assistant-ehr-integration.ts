@@ -48,14 +48,10 @@ export async function startCortiAssistantSession({
 
 function buildSoapInteractionOptions(templateId: string): SetInteractionOptionsPayload {
   return {
-    mode: {
-      fallback: "in-person",
-      options: ["in-person", "virtual"],
+    spokenLanguage: {
+      options: ["en"],
     },
     templates: {
-      sources: {
-        standard: { enabled: true },
-      },
       defaultTemplate: {
         behaviour: "force-first-document",
         template: {
@@ -66,9 +62,8 @@ function buildSoapInteractionOptions(templateId: string): SetInteractionOptionsP
       },
     },
     documents: {
-      actions: {
-        sync: true,
-      },
+      actions: { sync: true },
+      maxGenerated: 1,
       allowedLanguages: ["en"],
     },
   };

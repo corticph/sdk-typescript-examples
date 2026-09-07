@@ -139,7 +139,9 @@ export function CortiAssistantPanelClient({
       return;
     }
 
-    if (!syncCortiSoapDocumentToEhr(event)) return;
+    if (event.detail.name !== "document.synced") return;
+
+    syncCortiSoapDocumentToEhr(event.detail.payload);
 
     corti.hide();
     setIsCollapsedAfterSync(true);

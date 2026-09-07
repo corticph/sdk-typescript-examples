@@ -1,9 +1,6 @@
-import type { CortiEmbeddedEvent } from "@corti/embedded-web/react";
 import type { ConsultationFormFieldUpdates } from "@/lib/consultation-form-store";
 import { updateConsultationFormFields } from "@/lib/consultation-form-store";
 import { getCortiSoapFormField } from "@/lib/corti-soap-template";
-
-const DOCUMENT_SYNC_EVENT = "document.synced";
 
 type SyncedDocumentSection = {
   key?: string;
@@ -45,12 +42,7 @@ export function mapCortiSoapDocumentToEhrFields(
   }, {});
 }
 
-export function syncCortiSoapDocumentToEhr(event: CortiEmbeddedEvent) {
-  if (event.detail.name !== DOCUMENT_SYNC_EVENT) {
-    return false;
-  }
-
-  const fields = mapCortiSoapDocumentToEhrFields(event.detail.payload);
+export function syncCortiSoapDocumentToEhr(payload: unknown) {
+  const fields = mapCortiSoapDocumentToEhrFields(payload);
   updateConsultationFormFields(fields);
-  return true;
 }
