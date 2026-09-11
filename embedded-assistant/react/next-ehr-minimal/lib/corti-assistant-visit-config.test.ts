@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCortiAssistantVisitConfig } from "@/lib/corti-assistant-visit-config";
-import { CORTI_SOAP_SECTIONS, CORTI_SOAP_TEMPLATE_ID } from "@/lib/corti-soap-template";
+import { CORTI_SOAP_TEMPLATE_ID } from "@/lib/corti-soap-template";
 import type { PatientSummary } from "@/lib/ehr-types";
 
 const patient: PatientSummary = {
@@ -20,26 +20,23 @@ const patient: PatientSummary = {
 };
 
 describe("corti assistant visit config", () => {
-  it("uses the fixed schema-driven SOAP template and sections", () => {
+  it("uses the fixed schema-driven SOAP template", () => {
     const config = buildCortiAssistantVisitConfig({
       patient,
       reason: "Annual checkup",
     });
 
     expect(config.templateId).toBe(CORTI_SOAP_TEMPLATE_ID);
-    expect(config.templateLabel).toBe("SOAP Note");
-    expect(config.checklistItems.map((item) => item.id)).toEqual(
-      CORTI_SOAP_SECTIONS.map((section) => section.id),
-    );
   });
 
-  it("builds the annual-checkup demo facts", () => {
+  it("builds patient context facts", () => {
     const config = buildCortiAssistantVisitConfig({
       patient,
       reason: "Annual checkup",
     });
 
-    expect(config.cheatFacts).toHaveLength(20);
-    expect(config.cheatFacts.every((fact) => fact.group === "other")).toBe(true);
+    expect(config.patientFacts).toHaveLength(7);
+    expect(config.patientFacts).toContainEqual({ text: "Patient: Alex Morgan", group: "other" });
+    expect(config.patientFacts).toContainEqual({ text: "Reason for visit: Annual checkup", group: "other" });
   });
 });

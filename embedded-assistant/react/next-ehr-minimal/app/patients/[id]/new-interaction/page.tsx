@@ -50,9 +50,9 @@ export default async function NewPatientInteractionPage({
           </p>
         </header>
 
-        {consultationType === "annual-checkup" ? (
+        {consultationType === "annual-checkup" && (
           <AnnualCheckupCortiAssistant detail={detail} />
-        ) : null}
+        )}
 
         <SectionCard className="p-5">
           <ConsultationForm
